@@ -46,7 +46,17 @@
         </form>
         <p>Ke tashmë një llogari? <a href="#" id="show-login">Hyr</a></p>
     </section>
+<script>
+    // Array of games with images for each grade
+document.getElementById("show-signup").addEventListener("click", function() {
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("signup-section").style.display = "block";
+});
 
-    <script src="script.js"></script>
+document.getElementById("show-login").addEventListener("click", function() {
+    document.getElementById("signup-section").style.display = "none";
+    document.getElementById("login-section").style.display = "block";
+}); 
+</script>
 </body>
 </html>
