@@ -5,46 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Center</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
 </head>
 <body>
 
-        <div id="game-center">
-            <section id="grade-selection">
-                <h2>Zgjedh klasën</h2>
-                <div class="grade-buttons">
-                    <button class="grade-button" onclick="showGames(1)">
-                        <img src="grade1.png" alt="Klasa 1">
-                        <span>Klasa 1</span>
-                    </button>
-                    <button class="grade-button" onclick="showGames(2)">
-                        <img src="grade2.gif" alt="Klasa 2">
-                        <span>Klasa 2</span>
-                    </button>
-                    <button class="grade-button" onclick="showGames(3)">
-                        <img src="grade3.gif" alt="Klasa 3">
-                        <span>Klasa 3</span>
-                    </button>
-                    <button class="grade-button" onclick="showGames(4)">
-                        <img src="grade4.png" alt="Klasa 4">
-                        <span>Klasa 4</span>
-                    </button>
-                    <button class="grade-button" onclick="showGames(5)">
-                        <img src="grade5.jpg" alt="Klasa 5">
-                        <span>Klasa 5</span>
-                    </button>
-                </div>
-            </section>
-    
-            <section id="games-section" style="display:none;">
-                <h2>Lojërat për Klasën <span id="selected-grade"></span></h2>
-                <div id="games-list">
-                    <!-- Games will be shown here dynamically -->
-                </div>
-                <button onclick="goBack()">Prapa</button>
-            </section>
-        </div>
+    <div id="game-center">
+        <section id="grade-selection">
+            <h2>Zgjedh klasën</h2>
+            <div class="grade-buttons">
+                <button class="grade-button" onclick="showGames(1)">
+                    <img src="grade1.png" alt="Klasa 1">
+                    <span>Klasa 1</span>
+                </button>
+                <button class="grade-button" onclick="showGames(2)">
+                    <img src="grade2.gif" alt="Klasa 2">
+                    <span>Klasa 2</span>
+                </button>
+                <button class="grade-button" onclick="showGames(3)">
+                    <img src="grade3.gif" alt="Klasa 3">
+                    <span>Klasa 3</span>
+                </button>
+                <button class="grade-button" onclick="showGames(4)">
+                    <img src="grade4.png" alt="Klasa 4">
+                    <span>Klasa 4</span>
+                </button>
+                <button class="grade-button" onclick="showGames(5)">
+                    <img src="grade5.jpg" alt="Klasa 5">
+                    <span>Klasa 5</span>
+                </button>
+            </div>
+        </section>
 
-    
+        <section id="games-section" style="display:none;">
+            <h2>Lojërat për Klasën <span id="selected-grade"></span></h2>
+            <div id="games-list">
+                <!-- Lojërat do të shfaqen dinamikisht këtu -->
+            </div>
+            <button onclick="goBack()">Prapa</button>
+        </section>
+    </div>
+
+    <script>
+        const gamesData = {
+            1: [
+                { name: "Word Search", image: "word.png" },
+                { name: "Memory Game", image: "memory.jpg" },
+                { name: "Math Quiz", image: "math.jpg" }
+            ],
+            2: [
+                { name: "Word Search", image: "word.png" },
+                { name: "Memory Game", image: "memory.jpg" },
+                { name: "Math Quiz", image: "math.jpg" }
+            ],
+            3: [
+                { name: "Crossword", image: "crossword.jpg" },
+                { name: "Memory Game", image: "memory.jpg" },
+                { name: "Math Quiz", image: "math.jpg" }
+            ],
+            4: [
+                { name: "Math Quiz", image: "math.jpg" },
+                { name: "Memory Game", image: "memory.jpg" },
+                { name: "Crossword", image: "crossword.jpg" }
+            ],
+            5: [
+                { name: "Përemri", image: "peremri.jpg" },
+                { name: "Math Quiz", image: "math.jpg" },
+                { name: "Memory Game", image: "memory.jpg" }
+            ]
+        };
+
+        function showGames(grade) {
+            document.getElementById("grade-selection").style.display = "none";
+            document.getElementById("games-section").style.display = "block";
+            document.getElementById("selected-grade").textContent = grade;
+
+            const gamesList = gamesData[grade];
+            const gamesContainer = document.getElementById("games-list");
+            gamesContainer.innerHTML = "";
+
+            gamesList.forEach(game => {
+                const gameButton = document.createElement("button");
+                gameButton.classList.add("game-button");
+
+                const gameImage = document.createElement("img");
+                gameImage.src = game.image;
+                gameImage.alt = game.name;
+                gameImage.style.width = "100px";
+
+                const gameText = document.createElement("span");
+                gameText.textContent = game.name;
+
+                // Logjikë për të krijuar faqen e duhur
+                gameButton.addEventListener("click", () => {
+                    let fileName = "";
+
+                    if (game.name.toLowerCase() === "math quiz") {
+                        // Krijo emrin e faqes për matematikë sipas klasës
+                        fileName = `mathquiz${grade}.html`;
+                    } else {
+                        // Për lojërat e tjera
+                        fileName = game.name
+                            .toLowerCase()
+                            .replace(/[ë]/g, 'e')
+                            .replace(/[^a-z0-9]/g, '') + ".html";
+                    }
+
+                    window.location.href = fileName;
+                });
+
+                gameButton.appendChild(gameImage);
+                gameButton.appendChild(gameText);
+                gamesContainer.appendChild(gameButton);
+            });
+        }
+
+        function goBack() {
+            document.getElementById("grade-selection").style.display = "block";
+            document.getElementById("games-section").style.display = "none";
+        }
+    </script>
+
 </body>
 </html>
