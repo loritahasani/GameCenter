@@ -301,3 +301,116 @@ a:hover {
         gap: 10px;
     }
 }
+
+.math-quiz-menu {
+    background-color: rgba(0,0, 102,0.9);
+    width: 250px;
+    margin: 100px auto;
+    padding: 30px;
+    text-align: center;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #fff;
+}
+
+.math-quiz-menu button{
+    display: block;
+    margin: 15px auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #000080;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+}
+.math-quiz-menu button:hover {
+    background-color: #ddd;
+}
+.quiz-question {
+    background-color: rgba(0, 0, 102, 0.9);
+    width: 300px;
+    margin: 100px auto;
+    padding: 30px;
+    text-align: center;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #fff;
+}
+.quiz-section {
+    padding: 15px;
+    border-radius: 10px;
+    width: 270px;
+    margin: 10px auto;
+    background: white;
+    color: black;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.options button {
+    width: 200px;
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    background-color: limegreen;
+    color: white;
+    cursor: pointer;
+}
+.quiz-box {
+    background-color: rgba(0, 0, 102, 0.9);
+    width: 320px;
+    margin:20px auto;
+    padding: 25px 15px;
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 0 15px #fff;
+}
+
+.question-area {
+    background-color: white;
+    color: black;
+    padding: 20px;
+    border-radius: 15px;
+    margin: 15px auto;
+    width: 90%;
+}
+
+.question-area p {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.answers {
+    display: flex;
+    justify-content: center; /* Centers the button horizontally */
+    align-items: center;     /* Centers the button vertically */
+    gap: 20px;               /* Optional: space between buttons if there are multiple */
+}
+
+
+.answers button {
+    background-color: limegreen;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 18px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    justify-self: center;
+}
+
+.answers button:hover {
+    background-color: green;
+}
+
+.progress-text {
+    margin-top: 20px;
+    font-size: 16px;
+    background-color: rgba(0,0,0,0.2);
+    padding: 5px;
+    border-radius: 10px;
+}

@@ -125,7 +125,7 @@
         let school = document.getElementById("school").value || "";
 
         if (password !== confirmPassword) {
-            alert("Fjalëkalimet nuk përputhen!");
+            console.error("Fjalëkalimet nuk përputhen!");
             return;
         }
 
@@ -139,55 +139,49 @@
             const result = await response.json();
 
             if (response.ok) {
-                alert(result.message);
                 document.getElementById("signup-form").reset();
                 document.getElementById("signup-section").style.display = "none";
                 document.getElementById("login-section").style.display = "block";
             } else {
-                alert(result.error);
+                console.error(result.error);
             }
         } catch (error) {
-            alert("Gabim gjatë regjistrimit!");
-            console.error(error);
+            console.error("Gabim gjatë regjistrimit!", error);
         }
     });
 
     // LOGIN
-   // LOGIN
-document.getElementById("login-form").addEventListener("submit", async function(event) {
-    event.preventDefault();
+    document.getElementById("login-form").addEventListener("submit", async function(event) {
+        event.preventDefault();
 
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
 
-    try {
-        const response = await fetch("http://127.0.0.1:5000/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
+        try {
+            const response = await fetch("http://127.0.0.1:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
 
-        const result = await response.json();
+            const result = await response.json();
 
-        if (response.ok) {
-            alert(result.message);
-            localStorage.setItem("token", result.token);
+            if (response.ok) {
+                localStorage.setItem("token", result.token);
+                localStorage.setItem("studentId", email);
 
-            // Kontrollo rolin dhe drejto në faqen përkatëse
-            if (result.role === "student") {
-                window.location.href = "dashboard.html";  // Përdoruesi është student
-            } else if (result.role === "teacher") {
-                window.location.href = "teacher-results.html";  // Përdoruesi është mësues
+                if (result.role === "student") {
+                    window.location.href = "dashboard.html";
+                } else if (result.role === "teacher") {
+                    window.location.href = "teacher-results.html";
+                }
+            } else {
+                console.error(result.error);
             }
-        } else {
-            alert(result.error);
+        } catch (error) {
+            console.error("Gabim gjatë kyçjes!", error);
         }
-    } catch (error) {
-        alert("Gabim gjatë kyçjes!");
-        console.error(error);
-    }
-});
-
+    });
 </script>
 
 </body>

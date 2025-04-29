@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    JWTManager, create_access_token,
+    jwt_required, get_jwt_identity
+)
 from flask_pymongo import PyMongo
 from flask_cors import CORS
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -20,7 +23,7 @@ jwt = JWTManager(app)
 # Bcrypt configuration
 bcrypt = Bcrypt(app)
 
-# Register user endpoint
+# --------------------- REGISTER ---------------------
 @app.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
@@ -44,7 +47,7 @@ def register():
 
     return jsonify({"message": "Regjistrimi u krye me sukses!"}), 201
 
-# Login user endpoint
+# --------------------- LOGIN ---------------------
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -57,14 +60,14 @@ def login():
 
     access_token = create_access_token(identity=email)
 
-    # Dërgojmë informacionin mbi rolin bashkë me tokenin
     return jsonify({
         "message": "Kyçja u krye me sukses!",
         "token": access_token,
-        "role": user["role"]  # Shtojmë rolin në përgjigje
+        "role": user["role"],
+        "studentId": email 
     }), 200
 
-# Get teachers by school
+# --------------------- GET TEACHERS ---------------------
 @app.route("/teachers", methods=["GET"])
 @jwt_required()
 def get_teachers():
@@ -77,7 +80,7 @@ def get_teachers():
 
     return jsonify(teacher_list)
 
-# Get profile information of logged-in user
+# --------------------- GET PROFILE ---------------------
 @app.route("/profile", methods=["GET"])
 @jwt_required()
 def get_profile():
@@ -89,6 +92,28 @@ def get_profile():
 
     return jsonify(user), 200
 
-# Run the Flask app
+# --------------------- SAVE SCORE ---------------------
+@app.route("/save-score", methods=["POST"])
+@jwt_required()
+def save_score():
+    current_user = get_jwt_identity()  # Nxjerrim ID e nxënësit nga tokeni JWT
+    data = request.get_json()
+    score = data.get("score")
+    game = data.get("game", "math_quiz")
+
+    if score is None:
+        return jsonify({"error": "Pikët mungojnë!"}), 400
+
+    mongo.db.scores.insert_one({
+        "student_id": current_user,  # ID e nxënësit është email-i që vjen nga JWT
+        "score": score,
+        "game": game,
+        "timestamp": datetime.utcnow()
+    })
+
+    return jsonify({"message": "Pikët u ruajtën me sukses!"}), 201
+
+
+# --------------------- RUN APP ---------------------
 if __name__ == "__main__":
     app.run(debug=True)
