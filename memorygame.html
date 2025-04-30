@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Memory Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div style="text-align: center;">
+        <h2>Memory Game</h2>
+        <p class="progress-text">Gjej çiftet që përputhen!</p>
+        <div id="memory-game-board" class="answers" style="display: grid; grid-template-columns: repeat(5, 100px); grid-gap: 5px; justify-content: center; margin: 10px 0;">
+        </div>
+        <button onclick="resetGame()" style="padding: 10px 20px; margin-top: 20px; font-size: 16px;">Rinis</button>
+        <p id="game-message" style="font-size: 18px; margin-top: 20px; color: green;"></p> <!-- Mesazhi i suksesit -->
+        <div id="game-container" style="display: block;"> <!-- Container-i i lojës -->
+            <!-- The game board will appear here -->
+        </div>
+    </div>
+
+    <script>
+        const emojis = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍒', '🍍', '🍊', '🍏', '🍑'];
+
+        let cards = [];
+        let flipped = [];
+        let matched = [];
+
+        // Krijo kartat me dy kopje për secilin emoji
+        function generateUniqueCards() {
+            let cardEmojis = [];
+
+            // Shtoni dy kopje për secilin emoji
+            emojis.forEach(emoji => {
+                cardEmojis.push(emoji, emoji);
+            });
+
+            shuffle(cardEmojis); // Përzjehet lista e kartave
+            return cardEmojis;
+        }
+
+        // Funksioni për përzjerjen e kartave
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Funksioni për krijimin e kartave
+        function createCard(value) {
+            const btn = document.createElement("button");
+            btn.textContent = "❓";
+            btn.style.fontSize = "30px";
+            btn.style.width = "80px";
+            btn.style.height = "80px";
+            btn.style.cursor = "pointer";
+            btn.style.backgroundColor = "#f0f0f0";
+            btn.style.border = "1px solid #ccc";
+            btn.style.borderRadius = "5px";
+            btn.disabled = false;
+
+            btn.addEventListener("click", () => {
+                if (flipped.length < 2 && !flipped.includes(btn)) {
+                    btn.textContent = value;
+                    flipped.push(btn);
+
+                    if (flipped.length === 2) {
+                        setTimeout(checkMatch, 500); // 500ms për kthimin e kartave
+                    }
+                }
+            });
+
+            board.appendChild(btn);
+        }
+
+        // Funksioni për kontrollimin e ndeshjes së kartave
+        function checkMatch() {
+            const [card1, card2] = flipped;
+            if (card1.textContent === card2.textContent) {
+                matched.push(card1, card2);
+                card1.disabled = true;
+                card2.disabled = true;
+            } else {
+                setTimeout(() => {
+                    card1.textContent = "❓";
+                    card2.textContent = "❓";
+                }, 500);
+            }
+            flipped = [];
+
+            // Kontrollon nëse të gjitha kartat janë ndeshur dhe përfunduar
+            if (matched.length === cards.length) {
+                document.getElementById("game-message").textContent = "Urime! I gjete të gjitha çiftet!";
+                document.getElementById("game-container").style.display = "none"; // Fshihen kartat e lojës
+            }
+        }
+
+        // Funksioni për të rinisur lojën
+        function resetGame() {
+            document.getElementById("game-message").textContent = ""; // Fshij mesazhin
+            document.getElementById("game-container").style.display = "block"; // Rikthej kartat e lojës
+
+            board.innerHTML = "";
+            flipped = [];
+            matched = [];
+            cards = generateUniqueCards(); // Krijo kartat e reja
+            shuffle(cards);
+            cards.forEach(createCard);
+        }
+
+        const board = document.getElementById("memory-game-board");
+
+        // Fillimisht krijo kartat e pastra
+        cards = generateUniqueCards();
+        shuffle(cards);
+        cards.forEach(createCard);
+
+    </script>
+
+</body>
+</html>

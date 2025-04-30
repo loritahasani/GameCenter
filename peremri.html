@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Përemrat - Lojë Edukative</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+
+    <div class="quiz-box">
+        <h2>Përemrat - Gjej llojin e përemrit!</h2>
+        <p class="question">Pyetja do të shfaqet këtu.</p>
+        <div class="options">
+            <button onclick="checkAnswer('pronor')">Përemër Pronor</button>
+            <button onclick="checkAnswer('vetor')">Përemër Vetor</button>
+            <button onclick="checkAnswer('pyetes')">Përemër Pyetës</button>
+            <button onclick="checkAnswer('deftore')">Përemër Deftor</button>
+            <button onclick="checkAnswer('lidhore')">Përemër Lidhor</button>
+        </div>
+        <p id="result" class="result-text"></p>
+        <p id="score" class="final-score">Pikët: 0</p>
+        <p id="level" class="level-info">Niveli: 1</p>
+    </div>
+
+    <script>
+        let score = 0; // Pikët e përdoruesit
+        let currentLevel = 1; // Niveli fillestar
+        let currentQuestionIndex = 0; // Indeksi i pyetjes aktuale
+
+        // Pyetjet për secilin lloj përëmri me përëmrash të nënvizuar si fjalë të plota
+        const questions = {
+            1: [
+                { question: "<u>Ky</u> është shoku im.", correctAnswer: "pronor" },
+                { question: "<u>Ai</u> ka shkuar në shkollë.", correctAnswer: "vetor" },
+                { question: "<u>Kush</u> ka ardhur?", correctAnswer: "pyetes" },
+                { question: "<u>Ky</u> është libri i ri.", correctAnswer: "deftore" },
+                { question: "<u>Kur</u> është dita kur shkojmë në det?", correctAnswer: "lidhore" }
+            ],
+            2: [
+                { question: "<u>Ky</u> është libri yt.", correctAnswer: "pronor" },
+                { question: "<u>Ai</u> është djalë i mirë.", correctAnswer: "vetor" },
+                { question: "<u>Kush</u> është pyetja që ke bërë?", correctAnswer: "pyetes" },
+                { question: "<u>Kjo</u> është shkolla që duhet të shkojmë.", correctAnswer: "deftore" },
+                { question: "<u>Çfarë</u> ka ndodhur pas ngjarjes?", correctAnswer: "lidhore" }
+            ],
+            3: [
+                { question: "<u>Ky</u> është libri im që kam lexuar.", correctAnswer: "pronor" },
+                { question: "<u>Ai</u> ka bërë shumë punë të mira.", correctAnswer: "vetor" },
+                { question: "<u>Cili</u> janë pyetjet që duhet të përgjigjeni?", correctAnswer: "pyetes" },
+                { question: "<u>Ky</u> është student që studion për informatikë.", correctAnswer: "deftore" },
+                { question: "<u>Kur</u> kam parë këtë film shumë herë?", correctAnswer: "lidhore" }
+            ]
+        };
+
+        // Funksioni për përzierjen e pyetjeve
+        function shuffleQuestions(level) {
+            let questionsForLevel = [...questions[level]];
+            for (let i = questionsForLevel.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionsForLevel[i], questionsForLevel[j]] = [questionsForLevel[j], questionsForLevel[i]];
+            }
+            return questionsForLevel;
+        }
+
+        let shuffledQuestions = shuffleQuestions(currentLevel);
+
+        // Funksioni për kontrollin e përgjigjes
+        function checkAnswer(selectedAnswer) {
+            const correctAnswer = shuffledQuestions[currentQuestionIndex].correctAnswer;
+            const resultText = document.getElementById("result");
+
+            if (selectedAnswer === correctAnswer) {
+                score++;
+                resultText.textContent = "Përgjigje e saktë!";
+                resultText.style.color = "green";
+            } else {
+                resultText.textContent = "Përgjigje e gabuar!";
+                resultText.style.color = "red";
+            }
+
+            // Update pikët
+            document.getElementById("score").textContent = "Pikët: " + score;
+
+            // Kaloni në pyetjen tjetër menjëherë
+            setTimeout(nextQuestion, 1000); // Kaloni pas 1 sekonde
+        }
+
+        // Funksioni për pyetjen tjetër
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                currentQuestionIndex = 0;
+                currentLevel++;
+
+                if (currentLevel > 3) {
+                    alert("Keni mbaruar lojën! Pikët totale janë: " + score);
+                    currentLevel = 1; // Kthehu në nivelin 1
+                    score = 0;
+                    document.getElementById("score").textContent = "Pikët: 0";
+                }
+                document.getElementById("level").textContent = "Niveli: " + currentLevel;
+                shuffledQuestions = shuffleQuestions(currentLevel); // Përziejmë pyetjet për nivelin e ri
+            }
+
+            // Ndrysho pyetjen dhe mundësitë
+            const question = shuffledQuestions[currentQuestionIndex].question;
+            document.querySelector(".question").innerHTML = question; // Përdor innerHTML për të mbështetur nënvizim
+            document.getElementById("result").textContent = "";
+        }
+
+        // Inicializimi i pyetjes së parë
+        nextQuestion();
+    </script>
+
+</body>
+</html>
