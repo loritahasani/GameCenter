@@ -1,18 +1,207 @@
-<div class="crossword-container">
-    <h2>Crossword Game</h2>
-    <div id="crossword-grid" class="crossword-grid">
-      <!-- Cells will be dynamically generated with JavaScript -->
-    </div>
-    <div class="clues">
-      <h3>Clues</h3>
-      <ul id="across-clues">
-        <!-- Across clues go here -->
-      </ul>
-      <ul id="down-clues">
-        <!-- Down clues go here -->
-      </ul>
-    </div>
-    <button id="submit">Submit</button>
-    <div id="feedback"></div>
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <title>Fjalëkryqi</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: url('game.jpg') no-repeat center center fixed;
+      background-size: cover;
+      text-align: center;
+      padding: 20px;
+      color: white; /* Ngjyra e tekstit që mund të lexohet më mirë mbi foto */
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 36px; /* Rrit madhësinë për titujt */
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Hije për të theksuar titujt */
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(8, 50px);
+      justify-content: center;
+      gap: 5px;
+      margin: 20px auto;
+    }
+
+    .cell {
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      text-transform: uppercase;
+      text-align: center;
+      border: 2px solid #333;
+      background-color: #fff;
+      color: #333; /* Ngjyra e shkronjave për të pasur kontrast të lartë */
+      font-weight: bold; /* Të theksohen më shumë shkronjat */
+    }
+
+    .cell:focus {
+      background-color: lightblue; /* Dritë e ndryshuar kur është selektuar */
+      outline: none;
+    }
+
+    .clues {
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: left;
+      font-size: 18px; /* Madhësi më e madhe për përshkrimet */
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Dritë për të bërë përshkrimet më të lexueshme */
+    }
+
+    .clues h3 {
+      margin-bottom: 5px;
+      font-size: 20px; /* Rrit madhësinë për titujt e përshkrimeve */
+      font-weight: bold;
+    }
+
+    #start-button, #check-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    #start-button:hover, #check-button:hover {
+      background-color: #555;
+    }
+
+    #result {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 20px; /* Rrit madhësinë e tekstin të rezultatit */
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    #intro {
+      display: block;
+    }
+
+    #crossword-section {
+      display: none;
+    }
+</style>
+
+
+  <div id="intro">
+    <h1>Fjalëkryqi i Thjeshtë</h1>
+    <p>Plotëso fjalët sipas përshkrimeve. Kliko butonin më poshtë për të nisur.</p>
+    <button id="start-button" onclick="startGame()">Nise Lojën</button>
   </div>
-  
+
+  <div id="crossword-section">
+    <h1>Fjalëkryq</h1>
+    <p>Plotëso fjalët sipas përshkrimeve.</p>
+
+    <div class="clues">
+      <h3>Përshkrime:</h3>
+      <p><strong>1. Vertikalisht:</strong> Frut që është i kuq dhe i shijshëm (5 shkronja)</p>
+      <p><strong>2. Horizontalisht:</strong> Një profesion që ndihmon fëmijët të mësojnë (8 shkronja)</p>
+    </div>
+
+    <div class="grid" id="grid">
+      <!-- Fusha e fjalëkryqit -->
+      <input class="cell" id="r0c0" maxlength="1">
+      <input class="cell" id="r0c1" maxlength="1">
+      <input class="cell" id="r0c2" maxlength="1">
+      <input class="cell" id="r0c3" maxlength="1">
+      <input class="cell" id="r0c4" maxlength="1">
+      <input class="cell" id="r0c5" maxlength="1">
+      <input class="cell" id="r0c6" maxlength="1">
+      <input class="cell" id="r0c7" maxlength="1">
+
+      <input class="cell" id="r1c0" maxlength="1">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+
+      <input class="cell" id="r2c0" maxlength="1">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+
+      <input class="cell" id="r3c0" maxlength="1">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+
+      <input class="cell" id="r4c0" maxlength="1">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+
+    <button id="check-button" onclick="checkAnswers()">Kontrollo</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function startGame() {
+      // Fshi pjesën e hyrjes dhe shfaq fjalëkryqin
+      document.getElementById('intro').style.display = 'none';
+      document.getElementById('crossword-section').style.display = 'block';
+      
+      // Fshij tekstin e rezultatit kur fillon loja
+      document.getElementById('result').textContent = '';
+    }
+
+    function checkAnswers() {
+      const r0c0 = document.getElementById('r0c0').value.toUpperCase();
+      const r0c1 = document.getElementById('r0c1').value.toUpperCase();
+      const r0c2 = document.getElementById('r0c2').value.toUpperCase();
+      const r0c3 = document.getElementById('r0c3').value.toUpperCase();
+      const r0c4 = document.getElementById('r0c4').value.toUpperCase();
+      const r0c5 = document.getElementById('r0c5').value.toUpperCase();
+      const r0c6 = document.getElementById('r0c6').value.toUpperCase();
+      const r0c7 = document.getElementById('r0c7').value.toUpperCase();
+      
+      const r1c0 = document.getElementById('r1c0').value.toUpperCase();
+      const r2c0 = document.getElementById('r2c0').value.toUpperCase();
+      const r3c0 = document.getElementById('r3c0').value.toUpperCase();
+      const r4c0 = document.getElementById('r4c0').value.toUpperCase();
+
+      const horizontal = r0c0 + r0c1 + r0c2 + r0c3 + r0c4 + r0c5 + r0c6 + r0c7; // Horizontal: MËSUESJA
+      const vertical = r0c0 + r1c0 + r2c0 + r3c0 + r4c0; // Vertical: MOLLA
+
+      let correct = 0;
+      if (horizontal === "MËSUESJA") correct++;
+      if (vertical === "MOLLA") correct++;
+
+      const result = document.getElementById("result");
+      if (correct === 2) {
+        result.textContent = "Urime! I zgjidhe të gjitha fjalët saktë.";
+        result.style.color = "green";
+      } else {
+        result.textContent = "Disa përgjigje janë gabim. Provo përsëri!";
+        result.style.color = "red";
+      }
+    }
+  </script>
+
+</body>
+</html>

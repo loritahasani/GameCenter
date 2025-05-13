@@ -458,3 +458,85 @@ a:hover {
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+
+
+
+    .start-btn {
+      padding: 12px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #game {
+      display: none;
+      padding: 20px;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 40px);
+      gap: 3px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      background: white;
+      color: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      user-select: none;
+    }
+
+    .cell.selected {
+      background-color: lightblue;
+    }
+
+    .cell.found {
+      background-color: lightgreen;
+    }
+
+    #word-list {
+      font-size: 20px;
+      margin-top: 10px;
+      color: white; /* Ngjyra e fjalëve në listë */
+    }
+
+    #feedback {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    #restart-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+    }
+
+    #finish-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+    }

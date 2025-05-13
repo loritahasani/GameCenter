@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <title>Word Search Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="menu">
+  <div class="math-quiz-menu">
+    <h1>Word Search Game</h1>
+    <button class="start-btn" onclick="startGame()">Start</button>
+  </div>
+</div>
+
+<div id="game">
+  <h2>Gjej fjalët:</h2>
+  <div id="word-list"></div>
+  <div class="grid" id="grid"></div>
+  <div id="feedback"></div>
+  <button id="restart-button" onclick="startGame()">Rifillo</button>
+  <button id="finish-button" onclick="finishGame()">Përfunduat të gjitha</button>
+</div>
+
+<script>
+const wordSets = [
+  ["ARIU", "LULE", "BORA", "USHQIM", "BUKË"],
+  ["MOLLË", "LIBËR", "DRITË", "SHKOLLË", "KAFSHË"],
+  ["BESË", "GJUHË", "MIK", "QYTET", "KODËR"]
+];
+
+let currentWords = [];
+let foundWords = [];
+let selectedCells = [];
+let mouseDown = false;
+let currentSetIndex = 0;
+
+function startGame() {
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('finish-button').style.display = 'none';
+  document.getElementById('restart-button').style.display = 'none';
+  foundWords = [];
+  selectedCells = [];
+  generateGrid();
+}
+
+function generateGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÇË";
+  const size = 10;
+  let gridData = Array.from({ length: size }, () => Array(size).fill(''));
+
+  // Merr një set të ri fjalësh
+  currentWords = wordSets[currentSetIndex];
+  currentSetIndex = (currentSetIndex + 1) % wordSets.length;
+
+  // Vendos fjalët në mënyrë rastësore
+  currentWords.forEach(word => placeWord(gridData, word.toUpperCase()));
+
+  // Plotëso boshllëqet me shkronja të rastësishme
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (gridData[r][c] === '') {
+        gridData[r][c] = letters[Math.floor(Math.random() * letters.length)];
+      }
+    }
+  }
+
+  // Krijo vizualisht grid-in
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = gridData[r][c];
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener('mousedown', handleMouseDown);
+      cell.addEventListener('mouseenter', handleMouseEnter);
+      cell.addEventListener('mouseup', handleMouseUp);
+      grid.appendChild(cell);
+    }
+  }
+
+  // Shfaq listën e fjalëve
+  document.getElementById('word-list').textContent = currentWords.join(", ");
+}
+
+function placeWord(grid, word) {
+  const directions = [
+    [0, 1], [1, 0]  // Horizontal dhe Vertikal
+  ];
+  let placed = false;
+  const size = grid.length;
+
+  while (!placed) {
+    const dir = directions[Math.floor(Math.random() * directions.length)];
+    const startRow = Math.floor(Math.random() * size);
+    const startCol = Math.floor(Math.random() * size);
+
+    let r = startRow, c = startCol;
+    let canPlace = true;
+
+    for (let i = 0; i < word.length; i++) {
+      if (r < 0 || r >= size || c < 0 || c >= size || (grid[r][c] && grid[r][c] !== word[i])) {
+        canPlace = false;
+        break;
+      }
+      r += dir[0];
+      c += dir[1];
+    }
+
+    if (canPlace) {
+      r = startRow;
+      c = startCol;
+      for (let i = 0; i < word.length; i++) {
+        grid[r][c] = word[i];
+        r += dir[0];
+        c += dir[1];
+      }
+      placed = true;
+    }
+  }
+}
+
+function handleMouseDown(e) {
+  mouseDown = true;
+  selectedCells = [e.target];
+  e.target.classList.add('selected');
+}
+
+function handleMouseEnter(e) {
+  if (mouseDown) {
+    selectedCells.push(e.target);
+    e.target.classList.add('selected');
+  }
+}
+
+function handleMouseUp() {
+  mouseDown = false;
+  const word = selectedCells.map(c => c.textContent).join('');
+
+  const reversedWord = [...word].reverse().join('');
+  if (currentWords.includes(word) && !foundWords.includes(word)) {
+    markAsFound();
+    foundWords.push(word);
+    document.getElementById('feedback').textContent = `Saktë! Gjetët: ${word}`;
+  } else if (currentWords.includes(reversedWord) && !foundWords.includes(reversedWord)) {
+    markAsFound();
+    foundWords.push(reversedWord);
+    document.getElementById('feedback').textContent = `Saktë! Gjetët: ${reversedWord}`;
+  } else {
+    document.getElementById('feedback').textContent = 'Gabim. Provo përsëri!';
+    selectedCells.forEach(c => c.classList.remove('selected'));
+  }
+
+  selectedCells = [];
+
+  // Kontrollo nëse janë gjetur të gjitha fjalët
+  if (foundWords.length === currentWords.length) {
+    document.getElementById('feedback').textContent = 'Urime! I gjete të gjitha fjalët!';
+    document.getElementById('finish-button').style.display = 'inline-block';
+  }
+}
+
+function markAsFound() {
+  selectedCells.forEach(c => {
+    c.classList.remove('selected');
+    c.classList.add('found');
+  });
+}
+
+function finishGame() {
+  document.getElementById('restart-button').style.display = 'inline-block';
+}
+</script>
+
+</body>
+</html>
