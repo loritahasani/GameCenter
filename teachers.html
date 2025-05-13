@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <title>Paneli i Mësuesit</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mirë se vini, Mësues!</h1>
+        <h2>Rezultatet e Nxënësve:</h2>
+
+        <table id="score-table">
+            <thead>
+                <tr>
+                    <th>Emri</th>
+                    <th>Email</th>
+                    <th>Pikët</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="3">Duke u ngarkuar...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button onclick="logout()">Dil</button>
+    </div>
+
+    <script>
+        const token = localStorage.getItem("token");
+        const tableBody = document.querySelector("#score-table tbody");
+
+        if (!token) {
+            window.location.href = "index.html";
+        }
+
+        fetch("http://localhost:5000/teacher/scores", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            tableBody.innerHTML = "";
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="3">Asnjë pikë nuk është regjistruar ende.</td></tr>`;
+            } else {
+                data.forEach(entry => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${entry.student}</td>
+                        <td>${entry.email}</td>
+                        <td>${entry.score}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        })
+        .catch(err => {
+            console.error("Gabim:", err);
+            tableBody.innerHTML = `<tr><td colspan="3">Gabim gjatë ngarkimit të të dhënave.</td></tr>`;
+        });
+
+        function logout() {
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
