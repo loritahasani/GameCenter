@@ -2,12 +2,12 @@
 <html lang="sq">
 <head>
   <meta charset="UTF-8">
-  <title>Math Quiz - Klasa e Dytë</title>
+  <title>Kuiz në Matematikë - Klasa e Dytë</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="math-quiz-menu" id="menu">
-        <h2>MATH QUIZ GAME</h2>
+        <h2>Kuiz në Matematikë</h2>
         <button onclick="startQuiz()">PLAY</button>
       </div>
       
@@ -39,7 +39,7 @@
     function generateQuestions() {
       const questions = [];
       for (let i = 0; i < 5; i++) {
-        let a = Math.floor(Math.random() * 1000) + 1;  // Numra deri në 1000 për plus dhe minus
+        let a = Math.floor(Math.random() * 1000) + 1;
         let b = Math.floor(Math.random() * 1000) + 1;
         let operation = Math.random();
 
@@ -47,13 +47,11 @@
         let correctAnswer;
 
         if (operation > 0.7) {
-          // Shumëzim (deri në 10 * 10)
           let x = Math.floor(Math.random() * 10) + 1;
           let y = Math.floor(Math.random() * 10) + 1;
           questionText = `Sa është ${x} * ${y}?`;
           correctAnswer = x * y;
         } else {
-          // Zbritje ose shtim deri në 1000
           if (Math.random() > 0.5) {
             questionText = `Sa është ${a} + ${b}?`;
             correctAnswer = a + b;
@@ -134,6 +132,9 @@
             feedbackElement.innerText = `Urime! I përfundove të gjitha nivelet me sukses!`;
             feedbackElement.style.color = "gold";
 
+            // Ruajmë pikët në backend me tokenin nga localStorage
+            sendScoreToBackend(score);
+
             setTimeout(() => {
               resetGame();
             }, 3000);
@@ -159,6 +160,37 @@
         [array[i], array[j]] = [array[j], array[i]];
       }
       return array;
+    }
+
+    // Funksioni që dërgon pikët në backend me tokenin e ruajtur
+    function sendScoreToBackend(points) {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("Tokeni mungon! Nuk mund të ruaj pikët.");
+        return;
+      }
+
+      fetch("http://localhost:5000/save-score", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ game: "mathquiz", score: points })
+      })
+      .then(res => {
+        if (res.status === 401) {
+          alert("Sessioni skadoi. Ju lutem logohuni përsëri.");
+          return;
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data) {
+          console.log("Pikët u ruajtën me sukses:", data);
+        }
+      })
+      .catch(err => console.error("Gabim gjatë ruajtjes së pikëve:", err));
     }
   </script>
 </body>

@@ -6,69 +6,86 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Mirë se vini, Mësues!</h1>
-        <h2>Rezultatet e Nxënësve:</h2>
+  <div id="teacher-panel">
+    <section>
+      <h1>Mirë se vini, Mësues!</h1>
+      <h2>Rezultatet e Nxënësve:</h2>
 
-        <table id="score-table">
-            <thead>
-                <tr>
-                    <th>Emri</th>
-                    <th>Email</th>
-                    <th>Pikët</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="3">Duke u ngarkuar...</td>
-                </tr>
-            </tbody>
-        </table>
+      <table id="score-table">
+  <thead>
+    <tr>
+      <th>Emri</th>
+      <th>Email</th>
+      <th>Pikët për lojëra</th>
+      <th>Totali i pikëve</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td colspan="4">Duke u ngarkuar...</td>
+    </tr>
+  </tbody>
+</table>
 
-        <button onclick="logout()">Dil</button>
-    </div>
 
-    <script>
-        const token = localStorage.getItem("token");
-        const tableBody = document.querySelector("#score-table tbody");
+      <button onclick="logout()">Dil</button>
+    </section>
+  </div>
+  <script>
+  // Simulate getting teacherId from login/session/token
+  const teacherId = 'abc123'; // Replace with real ID dynamically
 
-        if (!token) {
-            window.location.href = "index.html";
-        }
+  async function fetchStudents() {
+    try {
+      const response = await fetch(`/api/teacher/${teacherId}/students`);
+      if (!response.ok) throw new Error('Network response was not ok');
 
-        fetch("http://localhost:5000/teacher/scores", {
-            method: "GET",
-            headers: {
-                "Authorization": "Bearer " + token
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            tableBody.innerHTML = "";
+      const students = await response.json();
 
-            if (data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="3">Asnjë pikë nuk është regjistruar ende.</td></tr>`;
-            } else {
-                data.forEach(entry => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${entry.student}</td>
-                        <td>${entry.email}</td>
-                        <td>${entry.score}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            }
-        })
-        .catch(err => {
-            console.error("Gabim:", err);
-            tableBody.innerHTML = `<tr><td colspan="3">Gabim gjatë ngarkimit të të dhënave.</td></tr>`;
-        });
+      const tbody = document.querySelector('#score-table tbody');
+      tbody.innerHTML = ''; // Clear loading or previous rows
 
-        function logout() {
-            localStorage.removeItem("token");
-            window.location.href = "index.html";
-        }
-    </script>
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4">Nuk ka studentë për këtë mësues.</td></tr>`;
+        return;
+      }
+
+      // For each student, create a table row with scores per game
+      students.forEach(student => {
+        const totalPoints = Object.values(student.scores).reduce((a,b) => a + b, 0);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${student.name}</td>
+          <td>${student.email}</td>
+          <td>
+            Math Quiz: ${student.scores.mathQuiz || 0}<br>
+            Memory Game: ${student.scores.memoryGame || 0}<br>
+            Crossword: ${student.scores.crossword || 0}
+          </td>
+          <td>${totalPoints}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+    } catch (error) {
+      console.error('Error loading students:', error);
+      const tbody = document.querySelector('#score-table tbody');
+      tbody.innerHTML = `<tr><td colspan="4">Gabim gjatë ngarkimit të të dhënave.</td></tr>`;
+    }
+  }
+
+  // Call this on page load
+  window.onload = fetchStudents;
+
+  // Logout example function
+  function logout() {
+    // Clear session/local storage tokens, then redirect
+    localStorage.removeItem('token');
+    window.location.href = 'index.html'; // your login page
+  }
+</script>
+
 </body>
+
 </html>

@@ -540,3 +540,59 @@ a:hover {
       cursor: pointer;
       display: none;
     }
+
+    #teacher-panel section {
+    background: rgba(255, 255, 255, 0.95);
+    color: #222;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    max-width: 700px;
+    width: 90%;
+    margin: 40px auto;
+    text-align: center;
+}
+
+#teacher-panel #score-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+#teacher-panel #score-table thead tr {
+    background: #6a11cb;
+    color: white;
+}
+
+#teacher-panel #score-table th, 
+#teacher-panel #score-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+
+#teacher-panel #score-table tbody tr:nth-child(even) {
+    background: #f4f4f4;
+}
+
+#teacher-panel #score-table tbody tr:hover {
+    background-color: #d7d0f0;
+    cursor: default;
+}
+
+#teacher-panel button {
+    background: #6a11cb;
+    color: white;
+    padding: 12px 30px;
+    margin-top: 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+#teacher-panel button:hover {
+    background: #2575fc;
+    transform: scale(1.05);
+}

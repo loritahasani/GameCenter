@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="sq">
 <head>
-  <meta charset="UTF-8">
-  <title>Math Quiz - Klasa e Parë</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Kuiz në Matematikë </title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="math-quiz-menu" id="menu">
-        <h2>MATH QUIZ GAME</h2>
+
+
+<div class="math-quiz-menu" id="menu">
+        <h2>Kuiz në Matematikë</h2>
         <button onclick="startQuiz()">PLAY</button>
       </div>
       
@@ -22,142 +24,207 @@
         </section>
         <p id="score-info" style="color: white;"></p>
         <p id="feedback" style="color: yellow; font-weight: bold;"></p>
-
       </div>
       
+<script>
+  let token = localStorage.getItem("token");
+  const quizContainer = document.getElementById("quiz-container");
+  const quizGame = document.getElementById("quiz-game");
+  const loginMessage = document.getElementById("login-message");
 
-  <script>
-    let currentLevel = 1;
-    let currentQuestion = 0;
-    let score = 0;
-
-    const levels = {
-      1: generateQuestions(),
-      2: generateQuestions(),
-      3: generateQuestions()
-    };
-
-    function generateQuestions() {
-      const questions = [];
-      for (let i = 0; i < 5; i++) {
-        let a = Math.floor(Math.random() * 10) + 1;
-        let b = Math.floor(Math.random() * 10) + 1;
-        let isAddition = Math.random() > 0.5;
-
-        let questionText = isAddition
-          ? `Sa është ${a} + ${b}?`
-          : `Sa është ${a + b} - ${b}?`;
-        let correctAnswer = isAddition ? a + b : a;
-
-        let wrongAnswer = correctAnswer + (Math.random() > 0.5 ? 1 : -1);
-        if (wrongAnswer === correctAnswer) wrongAnswer += 2;
-
-        let options = shuffle([correctAnswer, wrongAnswer]);
-
-        questions.push({
-          text: questionText,
-          correct: correctAnswer,
-          options: options
-        });
-      }
-      return questions;
-    }
-
-    function startQuiz() {
-      document.getElementById("menu").style.display = "none";
-      document.getElementById("quiz-container").style.display = "block";
-      currentLevel = 1;
-      currentQuestion = 0;
-      score = 0;
-      showQuestion();
-    }
-
-    function showQuestion() {
-      const levelQuestions = levels[currentLevel];
-      const question = levelQuestions[currentQuestion];
-
-      document.getElementById("level-title").innerText = `Level ${currentLevel}`;
-      document.getElementById("question-text").innerText = question.text;
-      document.getElementById("option0").innerText = question.options[0];
-      document.getElementById("option1").innerText = question.options[1];
-      document.getElementById("score-info").innerText = `Pyetja ${currentQuestion + 1} nga 5`;
-    }
-
-    function selectAnswer(index) {
-  const question = levels[currentLevel][currentQuestion];
-  const selected = question.options[index];
-  const feedbackElement = document.getElementById("feedback");
-
-  if (selected === question.correct) {
-    feedbackElement.innerText = "Saktë!";
-    feedbackElement.style.color = "lightgreen";
-    score++;
+  if (token) {
+    loginContainer.style.display = "none";
+    quizContainer.style.display = "block";
   } else {
-    feedbackElement.innerText = "Gabim!";
-    feedbackElement.style.color = "red";
+    loginContainer.style.display = "block";
+    quizContainer.style.display = "none";
   }
 
-  currentQuestion++;
+  function login() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-  setTimeout(() => {
-    feedbackElement.innerText = "";
+    fetch("http://localhost:5000/login", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({username, password})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        token = data.token;
+        localStorage.setItem("token", token);
+        loginContainer.style.display = "none";
+        quizContainer.style.display = "block";
+        loginMessage.innerText = "";
+      } else if (data.message) {
+        loginMessage.innerText = data.message;
+      }
+    })
+    .catch(() => loginMessage.innerText = "Gabim gjatë login-it!");
+  }
 
-    if (currentQuestion < 5) {
-      showQuestion();
+  function logout() {
+    localStorage.removeItem("token");
+    token = null;
+    loginContainer.style.display = "block";
+    quizContainer.style.display = "none";
+  }
+
+  // Math Quiz game code (si në kodin që më dërgove)
+  let currentLevel = 1;
+  let currentQuestion = 0;
+  let score = 0;
+  let totalScore = 0;
+
+  const levels = {
+    1: generateQuestions(),
+    2: generateQuestions(),
+    3: generateQuestions()
+  };
+
+  function generateQuestions() {
+    const questions = [];
+    for (let i = 0; i < 5; i++) {
+      let a = Math.floor(Math.random() * 10) + 1;
+      let b = Math.floor(Math.random() * 10) + 1;
+      let isAddition = Math.random() > 0.5;
+
+      let questionText = isAddition
+        ? `Sa është ${a} + ${b}?`
+        : `Sa është ${a + b} - ${b}?`;
+      let correctAnswer = isAddition ? a + b : a;
+
+      let wrongAnswer = correctAnswer + (Math.random() > 0.5 ? 1 : -1);
+      if (wrongAnswer === correctAnswer) wrongAnswer += 2;
+
+      let options = shuffle([correctAnswer, wrongAnswer]);
+
+      questions.push({
+        text: questionText,
+        correct: correctAnswer,
+        options: options
+      });
+    }
+    return questions;
+  }
+
+  function startQuiz() {
+    quizGame.style.display = "block";
+    currentLevel = 1;
+    currentQuestion = 0;
+    score = 0;
+    totalScore = 0;
+    showQuestion();
+  }
+
+  function showQuestion() {
+    const levelQuestions = levels[currentLevel];
+    const question = levelQuestions[currentQuestion];
+
+    document.getElementById("level-title").innerText = `Level ${currentLevel}`;
+    document.getElementById("question-text").innerText = question.text;
+    document.getElementById("option0").innerText = question.options[0];
+    document.getElementById("option1").innerText = question.options[1];
+    document.getElementById("score-info").innerText = `Pyetja ${currentQuestion + 1} nga 5`;
+  }
+
+  function selectAnswer(index) {
+    const question = levels[currentLevel][currentQuestion];
+    const selected = question.options[index];
+    const feedbackElement = document.getElementById("feedback");
+
+    if (selected === question.correct) {
+      feedbackElement.innerText = "Saktë!";
+      feedbackElement.style.color = "lightgreen";
+      score++;
+      totalScore++;
     } else {
-      if (currentLevel < 3) {
-        feedbackElement.innerText = `Përfundove Level ${currentLevel}. Vazhdojmë në Level ${currentLevel + 1}`;
-        feedbackElement.style.color = "cyan";
+      feedbackElement.innerText = "Gabim!";
+      feedbackElement.style.color = "red";
+    }
 
-        setTimeout(() => {
-          currentLevel++;
-          currentQuestion = 0;
-          score = 0;
-          feedbackElement.innerText = "";
-          showQuestion();
-        }, 2000);
+    currentQuestion++;
+
+    setTimeout(() => {
+      feedbackElement.innerText = "";
+
+      if (currentQuestion < 5) {
+        showQuestion();
       } else {
-        feedbackElement.innerText = `Urime! I përfundove të gjitha nivelet me sukses!`;
-        feedbackElement.style.color = "gold";
+        if (currentLevel < 3) {
+          feedbackElement.innerText = `Përfundove Level ${currentLevel}. Vazhdojmë në Level ${currentLevel + 1}`;
+          feedbackElement.style.color = "cyan";
 
-        setTimeout(() => {
-          resetGame();
-        }, 3000);
+          setTimeout(() => {
+            currentLevel++;
+            currentQuestion = 0;
+            score = 0;
+            feedbackElement.innerText = "";
+            showQuestion();
+          }, 2000);
+        } else {
+          feedbackElement.innerText = `Urime! I përfundove të gjitha nivelet! Piket: ${totalScore}`;
+          feedbackElement.style.color = "gold";
+
+          sendScoreToBackend(totalScore);
+
+          setTimeout(() => {
+            resetGame();
+          }, 4000);
+        }
       }
-    }
-  }, 1500);
-}
+    }, 1500);
+  }
 
-    function resetGame() {
-      document.getElementById("menu").style.display = "block";
-      document.getElementById("quiz-container").style.display = "none";
-      currentLevel = 1;
-      currentQuestion = 0;
-      score = 0;
+  function resetGame() {
+    quizGame.style.display = "none";
+    levels[1] = generateQuestions();
+    levels[2] = generateQuestions();
+    levels[3] = generateQuestions();
+    currentLevel = 1;
+    currentQuestion = 0;
+    score = 0;
+    totalScore = 0;
+  }
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  function sendScoreToBackend(points) {
+    if (!token) {
+      console.error("Token mungon!");
+      return;
     }
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+    fetch("http://localhost:5000/save-score", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ game: "mathquiz", score: points })
+    })
+    .then(res => {
+      if (res.status === 401) {
+        alert("Sessioni skadoi. Ju lutem logohuni përsëri.");
+        logout();
+        return;
       }
-      return array;
-    }
-
-
-
-function resetGame() {
-  document.getElementById("menu").style.display = "block";
-  document.getElementById("quiz-container").style.display = "none";
-  levels[1] = generateQuestions();
-  levels[2] = generateQuestions();
-  levels[3] = generateQuestions();
-  currentLevel = 1;
-  currentQuestion = 0;
-  score = 0;
-}
-
-
-  </script>
+      return res.json();
+    })
+    .then(data => {
+      if (data) {
+        console.log("Pikët u ruajtën:", data);
+      }
+    })
+    .catch(err => console.error("Gabim gjatë ruajtjes së pikëve:", err));
+  }
+</script>
 </body>
 </html>
