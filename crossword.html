@@ -2,206 +2,325 @@
 <html lang="sq">
 <head>
   <meta charset="UTF-8">
-  <title>Fjalëkryqi</title>
+  <title>Fjalëkryq - Klasa e 4-të</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       background: url('game.jpg') no-repeat center center fixed;
       background-size: cover;
       text-align: center;
       padding: 20px;
-      color: white; /* Ngjyra e tekstit që mund të lexohet më mirë mbi foto */
+      color: white;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-
     h1 {
       margin-bottom: 10px;
-      font-size: 36px; /* Rrit madhësinë për titujt */
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Hije për të theksuar titujt */
+      font-size: 36px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      color: #fff;
     }
-
+    .intro-container {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 600px;
+      margin: 50px auto;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    .intro-container p {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
     .grid {
       display: grid;
-      grid-template-columns: repeat(8, 50px);
+      grid-template-columns: repeat(7, 40px);
       justify-content: center;
-      gap: 5px;
+      gap: 4px;
       margin: 20px auto;
     }
-
     .cell {
-      width: 50px;
-      height: 50px;
-      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
       text-transform: uppercase;
       text-align: center;
       border: 2px solid #333;
       background-color: #fff;
-      color: #333; /* Ngjyra e shkronjave për të pasur kontrast të lartë */
-      font-weight: bold; /* Të theksohen më shumë shkronjat */
+      color: #333;
+      font-weight: bold;
+      position: relative;
     }
-
-    .cell:focus {
-      background-color: lightblue; /* Dritë e ndryshuar kur është selektuar */
+    .cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      border: none;
+      font-size: 20px;
+      text-transform: uppercase;
+      color: #333;
+      background: transparent;
+    }
+    .cell input:focus {
+      background-color: lightblue;
       outline: none;
     }
-
+    .black {
+      background-color: #333;
+      pointer-events: none;
+    }
+    .cell-number {
+      position: absolute;
+      top: 0;
+      left: 2px;
+      font-size: 10px;
+      color: #333;
+    }
     .clues {
-      max-width: 400px;
+      max-width: 700px;
       margin: 0 auto;
       text-align: left;
-      font-size: 18px; /* Madhësi më e madhe për përshkrimet */
+      font-size: 18px;
       color: white;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Dritë për të bërë përshkrimet më të lexueshme */
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
     }
-
     .clues h3 {
       margin-bottom: 5px;
-      font-size: 20px; /* Rrit madhësinë për titujt e përshkrimeve */
+      font-size: 22px;
       font-weight: bold;
+      color: #fff;
     }
-
     #start-button, #check-button {
       margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 18px;
+      padding: 15px 30px;
+      font-size: 20px;
       cursor: pointer;
-      background-color: #333;
+      background-color: #4CAF50;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     }
-
     #start-button:hover, #check-button:hover {
-      background-color: #555;
+      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
     }
-
     #result {
       margin-top: 10px;
       font-weight: bold;
-      font-size: 20px; /* Rrit madhësinë e tekstin të rezultatit */
+      font-size: 20px;
       color: white;
       text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
     }
-
     #intro {
       display: block;
     }
-
     #crossword-section {
       display: none;
     }
-</style>
-
-
+    .word-input {
+      margin: 20px auto;
+      max-width: 600px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .word-input input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+      text-transform: uppercase;
+      border: 2px solid #4CAF50;
+      border-radius: 5px;
+    }
+    .word-input label {
+      display: block;
+      text-align: left;
+      margin-top: 10px;
+      color: white;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    .error {
+      color: #ff6b6b;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+    .game-title {
+      font-size: 48px;
+      color: #fff;
+      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+      margin-bottom: 30px;
+    }
+    .game-description {
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
   <div id="intro">
-    <h1>Fjalëkryqi i Thjeshtë</h1>
-    <p>Plotëso fjalët sipas përshkrimeve. Kliko butonin më poshtë për të nisur.</p>
-    <button id="start-button" onclick="startGame()">Nise Lojën</button>
+    <div class="intro-container">
+      <h1 class="game-title">Fjalëkryqi i Thjeshtë</h1>
+      <p class="game-description">Mirë se vini në lojën e fjalëkryqit! Kjo lojë do t'ju ndihmojë të mësoni fjalë të reja në mënyrë argëtuese.</p>
+      <p>Si të luani:</p>
+      <ul style="text-align: left; color: white;">
+        <li>Lexoni përshkrimet e fjalëve</li>
+        <li>Shkruani fjalët në hapësirat e duhura</li>
+        <li>Kontrolloni përgjigjet tuaja</li>
+        <li>Mësoni fjalë të reja!</li>
+      </ul>
+      <button id="start-button" onclick="startGame()">Filloni Lojën</button>
+    </div>
   </div>
-
   <div id="crossword-section">
     <h1>Fjalëkryq</h1>
     <p>Plotëso fjalët sipas përshkrimeve.</p>
-
     <div class="clues">
-      <h3>Përshkrime:</h3>
-      <p><strong>1. Vertikalisht:</strong> Frut që është i kuq dhe i shijshëm (5 shkronja)</p>
-      <p><strong>2. Horizontalisht:</strong> Një profesion që ndihmon fëmijët të mësojnë (8 shkronja)</p>
+      <h3>Horizontale:</h3>
+      <p><strong>1.</strong> Përdoret për të shkruar (4 shkronja)</p>
+      <p><strong>2.</strong> Gjendet në çantën e nxënësit (5 shkronja)</p>
+      <p><strong>3.</strong> Lodër që përdoret për të luajtur jashtë (3 shkronja)</p>
+      <h3>Vertikale:</h3>
+      <p><strong>1.</strong> Ndriçon dhomën (5 shkronja)</p>
+      <p><strong>2.</strong> Aty ulen nxënësit në klasë (5 shkronja)</p>
+      <p><strong>3.</strong> Një person që e doni dhe me të cilin luani (3 shkronja)</p>
     </div>
-
-    <div class="grid" id="grid">
-      <!-- Fusha e fjalëkryqit -->
-      <input class="cell" id="r0c0" maxlength="1">
-      <input class="cell" id="r0c1" maxlength="1">
-      <input class="cell" id="r0c2" maxlength="1">
-      <input class="cell" id="r0c3" maxlength="1">
-      <input class="cell" id="r0c4" maxlength="1">
-      <input class="cell" id="r0c5" maxlength="1">
-      <input class="cell" id="r0c6" maxlength="1">
-      <input class="cell" id="r0c7" maxlength="1">
-
-      <input class="cell" id="r1c0" maxlength="1">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-
-      <input class="cell" id="r2c0" maxlength="1">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-
-      <input class="cell" id="r3c0" maxlength="1">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-
-      <input class="cell" id="r4c0" maxlength="1">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
+    <div class="grid" id="grid"></div>
+    <div class="word-input">
+      <h3>Shkruaj fjalët:</h3>
+      <div id="horizontal-words">
+        <label>Horizontale:</label>
+        <input type="text" id="h1" placeholder="Fjala 1 (4 shkronja)" maxlength="4" oninput="validateWord(this, 4)">
+        <div class="error" id="h1-error">Fjala duhet të ketë 4 shkronja</div>
+        <input type="text" id="h2" placeholder="Fjala 2 (5 shkronja)" maxlength="5" oninput="validateWord(this, 5)">
+        <div class="error" id="h2-error">Fjala duhet të ketë 5 shkronja</div>
+        <input type="text" id="h3" placeholder="Fjala 3 (3 shkronja)" maxlength="3" oninput="validateWord(this, 3)">
+        <div class="error" id="h3-error">Fjala duhet të ketë 3 shkronja</div>
+      </div>
+      <div id="vertical-words">
+        <label>Vertikale:</label>
+        <input type="text" id="v1" placeholder="Fjala 1 (5 shkronja)" maxlength="5" oninput="validateWord(this, 5)">
+        <div class="error" id="v1-error">Fjala duhet të ketë 5 shkronja</div>
+        <input type="text" id="v2" placeholder="Fjala 2 (5 shkronja)" maxlength="5" oninput="validateWord(this, 5)">
+        <div class="error" id="v2-error">Fjala duhet të ketë 5 shkronja</div>
+        <input type="text" id="v3" placeholder="Fjala 3 (3 shkronja)" maxlength="3" oninput="validateWord(this, 3)">
+        <div class="error" id="v3-error">Fjala duhet të ketë 3 shkronja</div>
+      </div>
     </div>
-
     <button id="check-button" onclick="checkAnswers()">Kontrollo</button>
     <div id="result"></div>
   </div>
-
   <script>
+    const gridLayout = [
+      ["L", "A", "P", "S", "", "", ""],
+      ["L", "I", "B", "Ë", "R", "", ""],
+      ["T", "O", "P", "", "", "", ""],
+      ["D", "R", "I", "T", "Ë", "", ""],
+      ["B", "A", "N", "K", "A", "", ""],
+      ["M", "I", "K", "", "", "", ""]
+    ];
+    const correctWords = {
+      horizontal: ["LAPS", "LIBËR", "TOP"],
+      vertical: ["DRITË", "BANKA", "MIK"]
+    };
+    const grid = document.getElementById("grid");
+    gridLayout.forEach((row, rowIndex) => {
+      row.forEach((cellValue, colIndex) => {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        if (cellValue === "") {
+          cell.classList.add("black");
+        } else {
+          const input = document.createElement("input");
+          input.maxLength = 1;
+          input.dataset.correct = cellValue;
+          input.dataset.row = rowIndex;
+          input.dataset.col = colIndex;
+          cell.appendChild(input);
+        }
+        grid.appendChild(cell);
+      });
+    });
+    function validateWord(input, requiredLength) {
+      const errorElement = document.getElementById(input.id + '-error');
+      if (input.value.length !== requiredLength) {
+        errorElement.style.display = 'block';
+        return false;
+      } else {
+        errorElement.style.display = 'none';
+        return true;
+      }
+    }
     function startGame() {
-      // Fshi pjesën e hyrjes dhe shfaq fjalëkryqin
       document.getElementById('intro').style.display = 'none';
       document.getElementById('crossword-section').style.display = 'block';
-      
-      // Fshij tekstin e rezultatit kur fillon loja
       document.getElementById('result').textContent = '';
     }
-
     function checkAnswers() {
-      const r0c0 = document.getElementById('r0c0').value.toUpperCase();
-      const r0c1 = document.getElementById('r0c1').value.toUpperCase();
-      const r0c2 = document.getElementById('r0c2').value.toUpperCase();
-      const r0c3 = document.getElementById('r0c3').value.toUpperCase();
-      const r0c4 = document.getElementById('r0c4').value.toUpperCase();
-      const r0c5 = document.getElementById('r0c5').value.toUpperCase();
-      const r0c6 = document.getElementById('r0c6').value.toUpperCase();
-      const r0c7 = document.getElementById('r0c7').value.toUpperCase();
-      
-      const r1c0 = document.getElementById('r1c0').value.toUpperCase();
-      const r2c0 = document.getElementById('r2c0').value.toUpperCase();
-      const r3c0 = document.getElementById('r3c0').value.toUpperCase();
-      const r4c0 = document.getElementById('r4c0').value.toUpperCase();
-
-      const horizontal = r0c0 + r0c1 + r0c2 + r0c3 + r0c4 + r0c5 + r0c6 + r0c7; // Horizontal: MËSUESJA
-      const vertical = r0c0 + r1c0 + r2c0 + r3c0 + r4c0; // Vertical: MOLLA
-
-      let correct = 0;
-      if (horizontal === "MËSUESJA") correct++;
-      if (vertical === "MOLLA") correct++;
-
+      const horizontalInputs = [
+        document.getElementById('h1').value.toUpperCase(),
+        document.getElementById('h2').value.toUpperCase(),
+        document.getElementById('h3').value.toUpperCase()
+      ];
+      const verticalInputs = [
+        document.getElementById('v1').value.toUpperCase(),
+        document.getElementById('v2').value.toUpperCase(),
+        document.getElementById('v3').value.toUpperCase()
+      ];
+      const validations = [
+        validateWord(document.getElementById('h1'), 4),
+        validateWord(document.getElementById('h2'), 5),
+        validateWord(document.getElementById('h3'), 3),
+        validateWord(document.getElementById('v1'), 5),
+        validateWord(document.getElementById('v2'), 5),
+        validateWord(document.getElementById('v3'), 3)
+      ];
+      if (validations.includes(false)) {
+        document.getElementById('result').textContent = "Ju lutem plotësoni të gjitha fjalët me numrin e duhur të shkronjave!";
+        document.getElementById('result').style.color = "orange";
+        return;
+      }
+      let allCorrect = true;
+      let correctCount = 0;
+      let totalCount = 0;
+      correctWords.horizontal.forEach((word, index) => {
+        if (horizontalInputs[index] === word) {
+          correctCount++;
+        } else {
+          allCorrect = false;
+        }
+        totalCount++;
+      });
+      correctWords.vertical.forEach((word, index) => {
+        if (verticalInputs[index] === word) {
+          correctCount++;
+        } else {
+          allCorrect = false;
+        }
+        totalCount++;
+      });
       const result = document.getElementById("result");
-      if (correct === 2) {
-        result.textContent = "Urime! I zgjidhe të gjitha fjalët saktë.";
-        result.style.color = "green";
+      if (allCorrect) {
+        result.textContent = "Urime! I gjete të gjitha fjalët saktë!";
+        result.style.color = "lightgreen";
       } else {
-        result.textContent = "Disa përgjigje janë gabim. Provo përsëri!";
-        result.style.color = "red";
+        result.textContent = `Gjetët ${correctCount} nga ${totalCount} fjalë saktë. Provo përsëri!`;
+        result.style.color = "orange";
       }
     }
   </script>
-
 </body>
 </html>
