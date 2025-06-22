@@ -161,9 +161,9 @@
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
-                    alert('Error creating assignment: ' + data.error);
+                    console.error('Error creating assignment:', data.error);
                 } else {
-                    alert(data.message);
+                    console.log('Assignment created successfully:', data.message);
                     closeAssignmentModal();
                     // Clear the form
                     document.getElementById('assignment-form').reset();
@@ -173,7 +173,6 @@
             })
             .catch(err => {
                 console.error('Failed to create assignment:', err);
-                alert('An error occurred. Please try again.');
             });
         });
 
@@ -196,16 +195,15 @@
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
-                    alert('Error updating assignment: ' + data.error);
+                    console.error('Error updating assignment:', data.error);
                 } else {
-                    alert(data.message);
+                    console.log('Assignment updated successfully:', data.message);
                     closeEditAssignmentModal();
                     loadAssignments();
                 }
             })
             .catch(err => {
                 console.error('Failed to update assignment:', err);
-                alert('An error occurred. Please try again.');
             });
         });
 
@@ -398,15 +396,14 @@
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
-                    alert('Error deleting assignment: ' + data.error);
+                    console.error('Error deleting assignment:', data.error);
                 } else {
-                    alert(data.message);
+                    console.log('Assignment deleted successfully:', data.message);
                     loadAssignments();
                 }
             })
             .catch(err => {
                 console.error('Failed to delete assignment:', err);
-                alert('An error occurred. Please try again.');
             });
         }
 

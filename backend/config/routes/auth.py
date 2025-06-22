@@ -21,6 +21,55 @@ def test():
     except Exception as e:
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
+@auth_bp.route("/test-login", methods=["POST"])
+def test_login():
+    """Debug route to test login functionality"""
+    try:
+        print("Test login endpoint called")
+        data = request.get_json()
+        print("Request data:", data)
+        print("Request headers:", dict(request.headers))
+        
+        if not data:
+            return jsonify({"error": "No JSON data received"}), 400
+            
+        email = data.get("email")
+        password = data.get("password")
+        
+        print(f"Login attempt for email: {email}")
+        
+        if not email or not password:
+            return jsonify({"error": "Email dhe fjalëkalimi janë të detyrueshëm"}), 400
+
+        user_data = auth_bp.mongo.db.users.find_one({"email": email})
+        print(f"User found: {user_data is not None}")
+        
+        if not user_data:
+            return jsonify({"error": "Email ose fjalëkalim i pasaktë!"}), 401
+
+        # Check if email is verified
+        if not user_data.get('is_verified', False):
+            return jsonify({"error": "Ju lutem verifikoni email-in tuaj para se të hyni!"}), 401
+
+        user = User.from_dict(user_data)
+        if not check_password_hash(user_data['password'], password):
+            return jsonify({"error": "Email ose fjalëkalim i pasaktë!"}), 401
+
+        token = jwt.encode({
+            "user_id": str(user_data["_id"]),
+            "exp": datetime.utcnow() + Config.JWT_ACCESS_TOKEN_EXPIRES
+        }, Config.SECRET_KEY, algorithm="HS256")
+
+        return jsonify({
+            "token": token,
+            "role": user.role,
+            "name": user.name,
+            "message": "Login successful"
+        }), 200
+    except Exception as e:
+        print(f"Test login error: {str(e)}")
+        return jsonify({"error": f"Gabim gjatë login-it: {str(e)}"}), 500
+
 @auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json()

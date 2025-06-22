@@ -76,14 +76,22 @@ async function login() {
         return;
     }
 
+    console.log('Attempting login with email:', email);
+    console.log('API_BASE_URL:', API_BASE_URL);
+
     try {
+        console.log('Sending login request to:', `${API_BASE_URL}/login`);
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+
         const data = await response.json();
+        console.log('Response data:', data);
 
         if (response.ok) {
             localStorage.setItem('token', data.token);
@@ -103,6 +111,9 @@ async function login() {
             message.style.color = 'red';
         }
     } catch (error) {
+        console.error('Login error details:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
         message.innerText = 'Gabim në lidhje me serverin!';
         message.style.color = 'red';
     }

@@ -11,8 +11,9 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Initialize extensions
-    CORS(app)
+    # Initialize extensions with proper CORS configuration
+    CORS(app, origins=["*"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+         allow_headers=["Content-Type", "Authorization"])
     JWTManager(app)
     
     # Initialize MongoDB

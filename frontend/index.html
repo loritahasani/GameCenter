@@ -377,31 +377,6 @@
                 }
             });
 
-            // Add beforeunload handler to clear flags when navigating away
-            window.addEventListener('beforeunload', function(event) {
-                console.log('Page unloading, clearing forceShowGames flag');
-                localStorage.removeItem('forceShowGames');
-            });
-
-            // Add handler to prevent navigation outside the app
-            window.addEventListener('beforeunload', function(event) {
-                // Only prevent navigation if we're logged in and trying to go to external sites
-                const token = localStorage.getItem('token');
-                if (token) {
-                    // Allow navigation to our own pages
-                    if (window.location.href.includes('localhost') || 
-                        window.location.href.includes('127.0.0.1') ||
-                        window.location.href.startsWith('file://')) {
-                        return;
-                    }
-                    
-                    // Prevent navigation to external sites
-                    event.preventDefault();
-                    event.returnValue = '';
-                    return '';
-                }
-            });
-
             if (token) {
                 const loginContainer = document.getElementById('login-container');
                 if (loginContainer) {
