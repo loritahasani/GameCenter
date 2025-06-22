@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paneli i Mësuesit</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+</head>
+<body>
+    <div id="login-container">
+        <h2>Hyni në llogarinë tuaj</h2>
+        <div id="login-form">
+            <input type="text" id="username" placeholder="Email">
+            <input type="password" id="password" placeholder="Fjalëkalimi">
+            <button class="btn btn-primary btn-large" onclick="login()">Hyni</button>
+            <p id="login-message"></p>
+        </div>
+    </div>
+
+    <div id="teacher-panel-container" style="display: none;">
+        <div class="teacher-panel-header">
+            <h2>Paneli i Mësuesit</h2>
+            <div class="tabs">
+                <button class="btn btn-info tab-button active" onclick="openTab(event, 'scores-tab')">Pikët e Nxënësve</button>
+                <button class="btn btn-info tab-button" onclick="openTab(event, 'assignments-tab')">Detyrat</button>
+            </div>
+        </div>
+
+        <div id="scores-tab" class="tab-content" style="display: block;">
+            <div id="students-list"></div>
+        </div>
+
+        <div id="assignments-tab" class="tab-content">
+            <div class="assignments-header">
+                <h3>Menaxhimi i Detyrave</h3>
+                <button class="btn btn-success" onclick="openAssignmentModal()">Shto Detyrë të Re</button>
+            </div>
+            <div id="assignments-list">
+                <!-- Assignments will be listed here -->
+                <p>Nuk ka ende detyra të shtuara.</p>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- Butoni "Dilni" në fund të faqes -->
+    <div style="text-align: center; margin-top: 30px; padding: 20px;">
+        <button class="btn btn-danger btn-large" onclick="logout()">Dilni</button>
+    </div>
+
+    <!-- Assignment Creation Modal -->
+    <div id="assignment-modal" class="modal-bg" style="display:none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAssignmentModal()">&times;</span>
+            <h3>Shto Detyrë të Re</h3>
+            <form id="assignment-form">
+                <label for="assignment-title">Titulli:</label>
+                <input type="text" id="assignment-title" required>
+                <label for="assignment-description">Përshkrimi:</label>
+                <textarea id="assignment-description" rows="4" required></textarea>
+                <label for="assignment-deadline">Afati i Fundit:</label>
+                <input type="datetime-local" id="assignment-deadline">
+                <button type="submit" class="btn btn-success btn-large">Shto Detyrën</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Assignment Modal -->
+    <div id="edit-assignment-modal" class="modal-bg" style="display:none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditAssignmentModal()">&times;</span>
+            <h3>Ndrysho Detyrën</h3>
+            <form id="edit-assignment-form">
+                <input type="hidden" id="edit-assignment-id">
+                <label for="edit-assignment-title">Titulli:</label>
+                <input type="text" id="edit-assignment-title" required>
+                <label for="edit-assignment-description">Përshkrimi:</label>
+                <textarea id="edit-assignment-description" rows="4" required></textarea>
+                <label for="edit-assignment-deadline">Afati i Fundit:</label>
+                <input type="datetime-local" id="edit-assignment-deadline">
+                <button type="submit" class="btn btn-primary btn-large">Ruaj Ndryshimet</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="student-detail-modal-bg" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:2000;"></div>
+    <div id="student-detail" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:12px; box-shadow:0 4px 32px rgba(0,0,0,0.25); min-width:320px; max-width:90vw; padding:32px 24px; z-index:2100;"></div>
+
+    <script src="assets/js/auth.js"></script>
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+            
+            // Load assignments when assignments tab is opened
+            if (tabName === 'assignments-tab') {
+                loadAssignments();
+            }
+            // Load student assignments when student assignments tab is opened
+            if (tabName === 'student-assignments-tab') {
+                loadStudentAssignments();
+            }
+        }
+
+        function openAssignmentModal() {
+            document.getElementById('assignment-modal').style.display = 'flex';
+        }
+
+        function closeAssignmentModal() {
+            document.getElementById('assignment-modal').style.display = 'none';
+        }
+
+        function openEditAssignmentModal(assignmentId) {
+            const token = localStorage.getItem('token');
+            fetch(`/api/assignments/${assignmentId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(assignment => {
+                if (assignment.error) {
+                    alert('Error: ' + assignment.error);
+                    return;
+                }
+                document.getElementById('edit-assignment-id').value = assignment._id;
+                document.getElementById('edit-assignment-title').value = assignment.title;
+                document.getElementById('edit-assignment-description').value = assignment.description;
+                if (assignment.deadline) {
+                    // Format for datetime-local input: YYYY-MM-DDTHH:mm
+                    const deadline = new Date(assignment.deadline);
+                    const formattedDeadline = deadline.toISOString().slice(0, 16);
+                    document.getElementById('edit-assignment-deadline').value = formattedDeadline;
+                } else {
+                    document.getElementById('edit-assignment-deadline').value = '';
+                }
+                document.getElementById('edit-assignment-modal').style.display = 'flex';
+            });
+        }
+
+        function closeEditAssignmentModal() {
+            document.getElementById('edit-assignment-modal').style.display = 'none';
+        }
+
+        document.getElementById('assignment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('assignment-title').value;
+            const description = document.getElementById('assignment-description').value;
+            const deadline = document.getElementById('assignment-deadline').value;
+            const token = localStorage.getItem('token');
+
+            fetch('/api/assignments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title, description, deadline: deadline || null })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error creating assignment: ' + data.error);
+                } else {
+                    alert(data.message);
+                    closeAssignmentModal();
+                    // Clear the form
+                    document.getElementById('assignment-form').reset();
+                    // Load assignments to refresh the list
+                    loadAssignments();
+                }
+            })
+            .catch(err => {
+                console.error('Failed to create assignment:', err);
+                alert('An error occurred. Please try again.');
+            });
+        });
+
+        document.getElementById('edit-assignment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const assignmentId = document.getElementById('edit-assignment-id').value;
+            const title = document.getElementById('edit-assignment-title').value;
+            const description = document.getElementById('edit-assignment-description').value;
+            const deadline = document.getElementById('edit-assignment-deadline').value;
+            const token = localStorage.getItem('token');
+
+            fetch(`/api/assignments/${assignmentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title, description, deadline: deadline || null })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error updating assignment: ' + data.error);
+                } else {
+                    alert(data.message);
+                    closeEditAssignmentModal();
+                    loadAssignments();
+                }
+            })
+            .catch(err => {
+                console.error('Failed to update assignment:', err);
+                alert('An error occurred. Please try again.');
+            });
+        });
+
+        function loadAssignments() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            fetch('/api/assignments', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(assignments => {
+                const assignmentsList = document.getElementById('assignments-list');
+                if (assignments.length > 0) {
+                    let html = '<div style="display: grid; gap: 15px;">';
+                    assignments.forEach(assignment => {
+                        const date = new Date(assignment.created_at).toLocaleDateString('sq-AL');
+                        const deadline = assignment.deadline ? new Date(assignment.deadline).toLocaleString('sq-AL') : 'Nuk ka';
+                        html += `
+                            <div class="assignment-item">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1;">
+                                        <h4>${assignment.title}</h4>
+                                        <p>${assignment.description}</p>
+                                        <small>Krijuar më: ${date}</small><br>
+                                        <small>Afati: <strong>${deadline}</strong></small>
+                                    </div>
+                                    <div class="assignment-actions">
+                                        <button onclick="openEditAssignmentModal('${assignment._id}')" class="btn btn-warning btn-small">
+                                            Ndrysho
+                                        </button>
+                                        <button onclick="viewSubmissions('${assignment._id}')" class="btn btn-info btn-small">
+                                            Shiko Dorëzimet
+                                        </button>
+                                        <button onclick="deleteAssignment('${assignment._id}', '${assignment.title}')" class="btn btn-danger btn-small">
+                                            Fshi
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="submissions-${assignment._id}" class="submissions-container" style="display:none; margin-top: 15px;"></div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    assignmentsList.innerHTML = html;
+                } else {
+                    assignmentsList.innerHTML = '<p>Nuk ka ende detyra të shtuara.</p>';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading assignments:', err);
+                document.getElementById('assignments-list').innerHTML = '<p style="color: red;">Gabim në ngarkimin e detyrave.</p>';
+            });
+        }
+
+        function viewSubmissions(assignmentId) {
+            const container = document.getElementById(`submissions-${assignmentId}`);
+            if (container.style.display === 'block') {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = '<p>Duke ngarkuar dorëzimet...</p>';
+            container.style.display = 'block';
+            
+            const token = localStorage.getItem('token');
+            fetch(`/api/assignments/${assignmentId}/submissions`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(submissions => {
+                if (submissions.error) {
+                    throw new Error(submissions.error);
+                }
+
+                if (submissions.length === 0) {
+                    container.innerHTML = '<p>Nuk ka ende dorëzime për këtë detyrë.</p>';
+                    return;
+                }
+
+                let html = '<h5>Dorëzimet e Nxënësve:</h5>';
+                submissions.forEach(sub => {
+                    html += `<div class="submission-item"><strong>${sub.student_name}</strong>`;
+                    if (sub.attempts && sub.attempts.length > 0) {
+                        sub.attempts.forEach(attempt => {
+                            const date = new Date(attempt.submitted_at).toLocaleString('sq-AL');
+                            html += `
+                                <div class="submission-attempt">
+                                    <small>Dorëzuar më: ${date}</small>
+                                    ${attempt.text ? `<p class="submission-text">${attempt.text}</p>` : ''}
+                                    ${attempt.file_path ? `<p><a href="/${attempt.file_path.replace(/\\/g, '/')}" target="_blank" class="file-link">Shiko skedarin e bashkëngjitur</a></p>` : ''}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p>Ky nxënës nuk ka dorëzuar ende.</p>';
+                    }
+                    html += `</div>`;
+                });
+                container.innerHTML = html;
+            })
+            .catch(err => {
+                container.innerHTML = `<p style="color: red;">Gabim: ${err.message}</p>`;
+            });
+        }
+
+        function deleteAssignment(assignmentId, assignmentTitle) {
+            if (!confirm(`A jeni të sigurt që dëshironi të fshini detyrën "${assignmentTitle}"?`)) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            fetch(`/api/assignments/${assignmentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Gabim në fshirjen e detyrës: ' + data.error);
+                } else {
+                    alert('Detyra u fshi me sukses!');
+                    loadAssignments(); // Refresh the list
+                }
+            })
+            .catch(err => {
+                console.error('Failed to delete assignment:', err);
+                alert('Gabim në fshirjen e detyrës. Ju lutem provoni përsëri.');
+            });
+        }
+
+        function loadScores() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+            fetch('http://localhost:5000/api/get-scores', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const listDiv = document.getElementById('students-list');
+                const detailDiv = document.getElementById('student-detail');
+                const modalBg = document.getElementById('student-detail-modal-bg');
+                listDiv.innerHTML = '';
+                detailDiv.style.display = 'none';
+                modalBg.style.display = 'none';
+                detailDiv.innerHTML = '';
+                if (data.students && data.students.length > 0) {
+                    let table = '<table class="scores-table"><thead><tr><th>Emri</th><th>Email</th><th>Detaje</th></tr></thead><tbody>';
+                    data.students.forEach(student => {
+                        table += `<tr><td>${student.name}</td><td>${student.email || ''}</td><td><button class='btn btn-primary btn-small' onclick=\"showStudentDetail('${student._id}')\">Shiko</button></td></tr>`;
+                    });
+                    table += '</tbody></table>';
+                    listDiv.innerHTML = table;
+                } else {
+                    listDiv.innerHTML = '<p>Nuk ka nxënës të regjistruar.</p>';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading scores:', err);
+                if (err.message === 'Failed to load scores') {
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                }
+            });
+        }
+
+        function showStudentDetail(studentId) {
+            const token = localStorage.getItem('token');
+            fetch(`http://localhost:5000/api/student/${studentId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const detailDiv = document.getElementById('student-detail');
+                const modalBg = document.getElementById('student-detail-modal-bg');
+                if (data.error) {
+                    detailDiv.innerHTML = `<p style='color:red;'>${data.error}</p>`;
+                    detailDiv.style.display = 'block';
+                    modalBg.style.display = 'block';
+                    return;
+                }
+                // Maksimumet për lojë
+                const maxPoints = { mathquiz1: 45, memorygame: 35, memory: 35, wordsearch: 30, mathquiz2: 45, mathquiz3: 45, mathquiz4: 45, mathquiz5: 45, crossword: 30, peremri: 15 };
+                let html = `<h3 style='margin-top:0;'>${data.name} <span style='font-size:0.9em; color:#888;'>(${data.email})</span></h3>`;
+                if (data.scores && Object.keys(data.scores).length > 0) {
+                    html += '<div class="student-scores-detail">';
+                    for (const [game, attempts] of Object.entries(data.scores)) {
+                        html += `<h4 style='margin-bottom:4px;'>${game}</h4><ul style='margin-top:0; margin-bottom:12px;'>`;
+                        attempts.forEach((a, i) => {
+                            let dateStr = '';
+                            if (a.date) {
+                                if (typeof a.date === 'string') {
+                                    const d = new Date(a.date);
+                                    if (!isNaN(d.getTime())) {
+                                        dateStr = d.toLocaleString();
+                                    } else {
+                                        dateStr = a.date;
+                                    }
+                                } else if (typeof a.date === 'object' && a.date !== null && a.date.$date) {
+                                    const d = new Date(a.date.$date);
+                                    if (!isNaN(d.getTime())) {
+                                        dateStr = d.toLocaleString();
+                                    }
+                                }
+                            }
+                            const max = maxPoints[game] || '?';
+                            html += `<li style='margin-bottom:2px;'>Tentativa ${i+1}: <b>${a.score} / ${max} pikë</b> <span style='color:#888;font-size:0.95em;'>${dateStr}</span></li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</div>';
+                } else {
+                    html += '<p>Nuk ka të dhëna për këtë nxënës.</p>';
+                }
+                html += `<div style='display:flex; gap:10px; margin-top:18px; justify-content:flex-end;'>`;
+                html += `<button onclick='closeStudentDetail()' style='background:#3b6cb7; color:#fff; border:none; border-radius:6px; padding:8px 18px; font-size:1em; cursor:pointer;'>Mbyll</button>`;
+                html += `</div>`;
+                detailDiv.innerHTML = html;
+                detailDiv.style.display = 'block';
+                modalBg.style.display = 'block';
+            });
+        }
+        function closeStudentDetail() {
+            document.getElementById('student-detail').style.display = 'none';
+            document.getElementById('student-detail-modal-bg').style.display = 'none';
+        }
+        // Mbyll modalin kur klikohet jashtë tij
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('student-detail');
+            const bg = document.getElementById('student-detail-modal-bg');
+            if (bg.style.display === 'block' && !modal.contains(e.target) && e.target !== modal) {
+                closeStudentDetail();
+            }
+        });
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+        function loadStudentAssignments() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // First load the teacher's assignments
+            fetch('/api/assignments', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(assignments => {
+                const studentAssignmentsList = document.getElementById('student-assignments-list');
+                
+                if (assignments.length === 0) {
+                    studentAssignmentsList.innerHTML = '<p>Nuk ka detyra të krijuara.</p>';
+                    return;
+                }
+
+                let html = '<div style="display: grid; gap: 20px;">';
+                
+                // For each assignment, get the submissions
+                const assignmentPromises = assignments.map(assignment => {
+                    return fetch(`/api/assignments/${assignment._id}/submissions`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(submissions => {
+                        return { assignment, submissions };
+                    })
+                    .catch(err => {
+                        console.error('Error loading submissions for assignment:', assignment._id, err);
+                        return { assignment, submissions: [] };
+                    });
+                });
+
+                Promise.all(assignmentPromises)
+                .then(results => {
+                    results.forEach(({ assignment, submissions }) => {
+                        const date = new Date(assignment.created_at).toLocaleDateString('sq-AL');
+                        html += `
+                            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <h4 style="margin: 0 0 10px 0; color: #2a5298;">${assignment.title}</h4>
+                                <p style="margin: 0 0 10px 0; color: #666;">${assignment.description}</p>
+                                <small style="color: #888;">Krijuar më: ${date}</small>
+                                
+                                <div style="margin-top: 15px;">
+                                    <h5 style="margin: 0 0 10px 0; color: #2a5298;">Dorëzimet (${submissions.length}):</h5>
+                        `;
+                        
+                        if (submissions.length > 0) {
+                            submissions.forEach(submission => {
+                                const submissionDate = new Date(submission.submitted_at).toLocaleDateString('sq-AL');
+                                html += `
+                                    <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #2a5298;">
+                                        <strong>Nxënësi:</strong> ${submission.student_name || 'E panjohur'}<br>
+                                        <strong>Data e dorëzimit:</strong> ${submissionDate}<br>
+                                `;
+                                
+                                if (submission.message) {
+                                    html += `<strong>Mesazhi:</strong> ${submission.message}<br>`;
+                                }
+                                
+                                if (submission.filename) {
+                                    html += `<strong>Skedari:</strong> ${submission.filename}<br>`;
+                                }
+                                
+                                html += '</div>';
+                            });
+                        } else {
+                            html += '<p style="color: #888; font-style: italic;">Asnjë dorëzim ende.</p>';
+                        }
+                        
+                        html += '</div></div>';
+                    });
+                    
+                    html += '</div>';
+                    studentAssignmentsList.innerHTML = html;
+                });
+            })
+            .catch(err => {
+                console.error('Error loading student assignments:', err);
+                document.getElementById('student-assignments-list').innerHTML = '<p style="color: red;">Gabim në ngarkimin e detyrave të nxënësve.</p>';
+            });
+        }
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('teacher-panel-container').style.display = 'block';
+                loadScores();
+            }
+        };
+    </script>
+</body>
+</html> 

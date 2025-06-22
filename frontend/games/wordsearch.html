@@ -3,26 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <title>Word Search Game</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
+  <!-- Profili i nxënësit -->
+  <div id="profile-icon" style="display:none; position: absolute; top: 20px; right: 30px; cursor: pointer; z-index: 1000;">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+          <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+          <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+      </svg>
+  </div>
+  <!-- Modal i profilit -->
+  <div id="profile-modal" style="display:none; position: fixed; top: 70px; right: 30px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 20px; min-width: 220px; z-index: 2000;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+          <svg width="50" height="50" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+              <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+              <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+          </svg>
+          <div>
+              <div id="profile-username" style="font-weight: bold;">Emri</div>
+              <div id="profile-email" style="font-size: 0.9em; color: #888;">Email</div>
+          </div>
+      </div>
+      <hr style="margin: 15px 0;">
+      <div>Pikët: <span id="profile-score">0</span></div>
+      <button onclick="logout()" style="margin-top: 15px; width: 100%; background: #e74c3c; color: #fff; border: none; border-radius: 5px; padding: 8px 0; cursor: pointer;">Dil</button>
+  </div>
 
-<div id="menu">
+<div id="login-container">
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <p id="login-message" style="color:red;"></p>
+</div>
+
+<div id="menu" style="display:none;">
   <div class="math-quiz-menu">
+    <span class="game-icon">🔍</span>
     <h1>Word Search Game</h1>
+    <br>
     <button class="start-btn" onclick="startGame()">Start</button>
   </div>
 </div>
 
-<div id="game">
+<div id="game" style="display:none;">
+  <span id="confetti" class="confetti" style="display:none;"></span>
   <h2>Gjej fjalët:</h2>
-  <div id="word-list"></div>
-  <div class="grid" id="grid"></div>
-  <div id="feedback"></div>
-  <button id="restart-button" onclick="startGame()">Rifillo</button>
-  <button id="finish-button" onclick="finishGame()">Përfunduat të gjitha</button>
+  <div id="word-list" class="word-list"></div>
+  <div id="grid" class="word-search-grid"></div>
+  <div id="feedback" class="memory-game-message"></div>
+  <button id="restart-button" class="memory-reset-button" onclick="startGame()">Rifillo</button>
+  <button id="finish-button" class="play-button" onclick="finishGame()">Përfunduat të gjitha</button>
 </div>
 
+<script src="../assets/js/auth.js"></script>
 <script>
 const wordSets = [
   ["ARIU", "LULE", "BORA", "USHQIM", "BUKË"],
@@ -35,6 +71,7 @@ let foundWords = [];
 let selectedCells = [];
 let mouseDown = false;
 let currentSetIndex = 0;
+let score = 0;
 
 function startGame() {
   document.getElementById('menu').style.display = 'none';
@@ -44,6 +81,7 @@ function startGame() {
   document.getElementById('restart-button').style.display = 'none';
   foundWords = [];
   selectedCells = [];
+  score = 0;
   generateGrid();
 }
 
@@ -75,7 +113,7 @@ function generateGrid() {
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
       const cell = document.createElement('div');
-      cell.className = 'cell';
+      cell.className = 'word-search-cell';
       cell.textContent = gridData[r][c];
       cell.dataset.row = r;
       cell.dataset.col = c;
@@ -148,10 +186,12 @@ function handleMouseUp() {
   if (currentWords.includes(word) && !foundWords.includes(word)) {
     markAsFound();
     foundWords.push(word);
+    score += 6;
     document.getElementById('feedback').textContent = `Saktë! Gjetët: ${word}`;
   } else if (currentWords.includes(reversedWord) && !foundWords.includes(reversedWord)) {
     markAsFound();
     foundWords.push(reversedWord);
+    score += 6;
     document.getElementById('feedback').textContent = `Saktë! Gjetët: ${reversedWord}`;
   } else {
     document.getElementById('feedback').textContent = 'Gabim. Provo përsëri!';
@@ -164,6 +204,7 @@ function handleMouseUp() {
   if (foundWords.length === currentWords.length) {
     document.getElementById('feedback').textContent = 'Urime! I gjete të gjitha fjalët!';
     document.getElementById('finish-button').style.display = 'inline-block';
+    showConfetti();
   }
 }
 
@@ -175,7 +216,57 @@ function markAsFound() {
 }
 
 function finishGame() {
+  sendScoreToBackend("wordsearch", score);
   document.getElementById('restart-button').style.display = 'inline-block';
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('menu').style.display = 'block';
+  loadUserScores();
+}
+
+function loadUserScores() {
+    if (!token) return;
+    fetch("http://localhost:5000/api/get-scores", {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Failed to load scores');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.scores) {
+            const scoresDiv = document.getElementById("my-scores");
+            if (scoresDiv) {
+                scoresDiv.innerHTML = "";
+                if (data.scores.wordsearch !== undefined) {
+                    const scoreElement = document.createElement("p");
+                    scoreElement.textContent = `Pikët e Mia: ${data.scores.wordsearch}`;
+                    scoresDiv.appendChild(scoreElement);
+                } else {
+                    scoresDiv.textContent = "Nuk ka pikë për këtë lojë.";
+                }
+            }
+        }
+    })
+    .catch(err => {
+        console.error("Error loading scores:", err);
+        if (err.message === 'Failed to load scores') {
+            localStorage.removeItem("token");
+            window.location.reload();
+        }
+    });
+}
+
+function showConfetti() {
+  const confetti = document.getElementById('confetti');
+  if (confetti) {
+    confetti.style.display = 'block';
+    confetti.innerHTML = '🎉🎊✨';
+    setTimeout(() => { confetti.style.display = 'none'; confetti.innerHTML = ''; }, 1800);
+  }
 }
 </script>
 

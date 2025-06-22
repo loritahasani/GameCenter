@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Center</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Profili i nxënësit -->
+    <div id="profile-icon" style="display:none; position: absolute; top: 20px; right: 30px; cursor: pointer; z-index: 1000;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+            <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+            <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+        </svg>
+    </div>
+    <!-- Modal i profilit -->
+    <div id="profile-modal" style="display:none; position: fixed; top: 70px; right: 30px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 20px; min-width: 220px; z-index: 2000;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="50" height="50" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+                <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+                <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+            </svg>
+            <div>
+                <div id="profile-username" style="font-weight: bold;">Emri</div>
+                <div id="profile-email" style="font-size: 0.9em; color: #888;">Email</div>
+            </div>
+        </div>
+        <hr style="margin: 15px 0;">
+        <div>Pikët: <span id="profile-score">0</span></div>
+        <button onclick="logout()" style="margin-top: 15px; width: 100%; background: #e74c3c; color: #fff; border: none; border-radius: 5px; padding: 8px 0; cursor: pointer;">Dil</button>
+    </div>
+    <div id="login-container">
+        <h2>Hyni në llogarinë tuaj</h2>
+        <div id="login-form">
+            <input type="text" id="username" placeholder="Email">
+            <input type="password" id="password" placeholder="Fjalëkalimi">
+            <button onclick="login()">Hyni</button>
+            <p id="login-message"></p>
+        </div>
+        <div class="login-container" id="register-container" style="display: none;">
+            <h2>Regjistrohu</h2>
+            <input type="text" id="reg-name" placeholder="Emri">
+            <input type="text" id="reg-email" placeholder="Email">
+            <input type="password" id="reg-password" placeholder="Fjalëkalimi">
+            <div class="form-group">
+                <label for="reg-role">Roli:</label>
+                <select id="reg-role" class="form-control">
+                    <option value="student">Student</option>
+                    <option value="teacher">Mësues</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reg-school">Shkolla:</label>
+                <select id="reg-school" class="form-control" required>
+                    <option value="">Zgjidh shkollën</option>
+                    <option value="Shkolla Fillore '1 Maj'">Shkolla Fillore '1 Maj'</option>
+                    <option value="Shkolla Fillore '28 Nëntori'">Shkolla Fillore '28 Nëntori'</option>
+                    <option value="Shkolla Fillore '7 Marsi'">Shkolla Fillore '7 Marsi'</option>
+                    <option value="Shkolla Fillore '11 Janari'">Shkolla Fillore 'Iliria</option>
+                    <option value="Shkolla Fillore 'Deshmoret e Kombit'">Shkolla Fillore 'Deshmoret e Kombit'</option>
+                </select>
+            </div>
+            <div class="form-group" id="teacher-select-group" style="display: none;">
+                <label for="reg-teacher">Mësuesi:</label>
+                <select id="reg-teacher" class="form-control" required>
+                    <option value="">Zgjidh mësuesin</option>
+                </select>
+                <button type="button" onclick="debugTeachers()" style="margin-top: 5px; background: #95a5a6; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 12px;">Testo mësuesit</button>
+            </div>
+            <div class="form-group" id="teacher-class-select-group" style="display: none;">
+                <label for="reg-teacher-class">Klasa:</label>
+                <select id="reg-teacher-class" class="form-control" required>
+                    <option value="">Zgjidh klasën</option>
+                    <option value="1">Klasa 1</option>
+                    <option value="2">Klasa 2</option>
+                    <option value="3">Klasa 3</option>
+                    <option value="4">Klasa 4</option>
+                    <option value="5">Klasa 5</option>
+                </select>
+            </div>
+            <button onclick="register()">Regjistrohu</button>
+            <p id="register-message"></p>
+            <p>Ke llogari? <a href="#" onclick="toggleForms()">Hyni këtu</a></p>
+        </div>
+        <div class="login-container" id="verify-container" style="display: none;">
+            <h2>Verifiko Email-in</h2>
+            <p>Ju është dërguar një kod verifikimi në email. Shkruani kodin më poshtë:</p>
+            <input type="text" id="verify-email" placeholder="Email" readonly>
+            <input type="text" id="verify-code" placeholder="Kodi i verifikimit">
+            <button onclick="verifyCode()">Verifiko</button>
+            <button onclick="resendVerification()" style="background: #95a5a6; margin-top: 10px;">Dërgo kodin përsëri</button>
+            <p id="verify-message"></p>
+        </div>
+        <p>Nuk keni llogari? <a href="#" onclick="toggleForms()">Regjistrohu</a></p>
+    </div>
+
+
+    <div id="menu" style="display: none;">
+        <h2>Zgjidhni klasën</h2>
+        <div class="class-buttons" id="class-buttons-container">
+            <!-- Class cards will be generated by JS -->
+        </div>
+    </div>
+
+    <div id="games-menu" style="display: none;">
+        <h2>Zgjidhni lojën</h2>
+        <div class="game-buttons" id="games-container">
+            <!-- Games will be added here based on class -->
+        </div>
+        <button onclick="backToClasses()" class="back-button">Kthehu te Klasat</button>
+    </div>
+
+    <div id="assignments-container" style="display: none;">
+        <h2>Detyrat e mia</h2>
+        <div id="assignments-list" class="assignments-list">
+            <!-- Assignments will be loaded here -->
+        </div>
+        <button onclick="backToGames()" class="back-button">Kthehu te Lojërat</button>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script>
+        let selectedClass = null;
+
+        const classData = [
+            { grade: 1, label: 'Klasa 1', image: 'assets/images/grade1.png' },
+            { grade: 2, label: 'Klasa 2', image: 'assets/images/grade2.gif' },
+            { grade: 3, label: 'Klasa 3', image: 'assets/images/grade3.gif' },
+            { grade: 4, label: 'Klasa 4', image: 'assets/images/grade4.png' },
+            { grade: 5, label: 'Klasa 5', image: 'assets/images/grade5.jpg' }
+        ];
+
+        function toggleForms() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-container');
+            const toggleLink = document.querySelector('#login-container p a');
+            
+            if (loginForm.style.display !== 'none') {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                toggleLink.textContent = 'Hyni';
+            } else {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                toggleLink.textContent = 'Regjistrohu';
+            }
+        }
+
+        function initializeForm() {
+            const roleSelect = document.getElementById('reg-role');
+            const teacherSelectGroup = document.getElementById('teacher-select-group');
+            const teacherClassSelectGroup = document.getElementById('teacher-class-select-group');
+            const schoolSelect = document.getElementById('reg-school');
+            
+            if (roleSelect.value === 'student') {
+                teacherSelectGroup.style.display = 'block';
+                teacherClassSelectGroup.style.display = 'none';
+                if (schoolSelect.value) {
+                    loadTeachers(schoolSelect.value);
+                }
+            } else { // Teacher
+                teacherSelectGroup.style.display = 'none';
+                teacherClassSelectGroup.style.display = 'block';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+
+            if (token) {
+                const loginContainer = document.getElementById('login-container');
+                if (loginContainer) {
+                    loginContainer.style.display = 'none';
+                }
+                
+                if (role === 'teacher') {
+                    window.location.href = 'teachers.html';
+                } else if (role === 'student') {
+                    document.body.classList.remove('auth-view');
+                    document.body.classList.add('games-view');
+                    document.getElementById('games-menu').style.display = 'block';
+                    loadGames();
+                }
+            }
+        
+            // Listen for student login completion event
+            document.addEventListener('studentLoginComplete', function(event) {
+                console.log('Student login completed, loading games...');
+                // Hide login container
+                const loginContainer = document.getElementById('login-container');
+                if (loginContainer) {
+                    loginContainer.style.display = 'none';
+                }
+                loadGames();
+                showProfileIconIfLoggedIn();
+                fetchUserProfileAndScores();
+            });
+
+            // This button is now only for teachers. It will be hidden for students by loadGames().
+            const assignmentsBtn = document.getElementById('assignments-btn');
+            if(assignmentsBtn) {
+                assignmentsBtn.addEventListener('click', function() {
+                    window.location.href = 'teachers.html';
+                });
+            }
+
+            initializeForm();
+            
+            document.getElementById('reg-role').addEventListener('change', function() {
+                const teacherSelectGroup = document.getElementById('teacher-select-group');
+                const teacherSelect = document.getElementById('reg-teacher');
+                const schoolSelect = document.getElementById('reg-school');
+                const teacherClassSelectGroup = document.getElementById('teacher-class-select-group');
+                const teacherClassSelect = document.getElementById('reg-teacher-class');
+                
+                if (this.value === 'student') {
+                    teacherSelectGroup.style.display = 'block';
+                    teacherSelect.required = true;
+                    teacherClassSelectGroup.style.display = 'none';
+                    teacherClassSelect.required = false;
+                    if (schoolSelect.value) {
+                        loadTeachers(schoolSelect.value);
+                    }
+                } else { // Teacher
+                    teacherSelectGroup.style.display = 'none';
+                    teacherSelect.required = false;
+                    teacherClassSelectGroup.style.display = 'block';
+                    teacherClassSelect.required = true;
+                }
+            });
+
+            document.getElementById('reg-school').addEventListener('change', function() {
+                const roleSelect = document.getElementById('reg-role');
+                if (roleSelect.value === 'student') {
+                    loadTeachers(this.value);
+                }
+            });
+
+            renderClassButtons();
+        });
+
+        async function loadGames() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error("DEBUG: LoadGames -> No token found!");
+                return;
+            }
+
+            // Hide login container when loading games
+            const loginContainer = document.getElementById('login-container');
+            if (loginContainer) {
+                loginContainer.style.display = 'none';
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    console.error(`DEBUG: LoadGames -> Fetch failed: ${response.status}`);
+                    throw new Error('Failed to fetch user data');
+                }
+
+                const userData = await response.json();
+                console.log('User data:', userData);
+                
+                if (userData.role === 'student' && userData.class_level) {
+                    document.getElementById('menu').style.display = 'none';
+                    selectClass(userData.class_level);
+                    document.getElementById('games-menu').style.display = 'block'; 
+                } else if (userData.role === 'student') {
+                    // Student without class_level - show class selection
+                    document.getElementById('menu').style.display = 'block';
+                    document.getElementById('games-menu').style.display = 'none';
+                } else {
+                    // Not a student
+                    console.error('User is not a student:', userData.role);
+                    document.getElementById('menu').style.display = 'block';
+                    document.getElementById('games-menu').style.display = 'none';
+                }
+            } catch (error) {
+                console.error(`DEBUG: LoadGames -> Error: ${error.message}`);
+                // Fallback to class selection on error
+                document.getElementById('menu').style.display = 'block';
+                document.getElementById('games-menu').style.display = 'none';
+            }
+        }
+
+        async function loadTeachers(school) {
+            try {
+                console.log('Loading teachers for school:', school);
+                const response = await fetch(`http://localhost:5000/api/teachers?school=${encodeURIComponent(school)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Teachers data received:', data);
+                
+                const teacherSelect = document.getElementById('reg-teacher');
+                teacherSelect.innerHTML = '<option value="">Zgjidh mësuesin</option>';
+                
+                if (data.teachers && data.teachers.length > 0) {
+                    data.teachers.forEach(teacher => {
+                        const option = document.createElement('option');
+                        option.value = teacher._id;
+                        option.textContent = `${teacher.name} (Klasa ${teacher.class_level})`;
+                        teacherSelect.appendChild(option);
+                    });
+                    console.log(`Loaded ${data.teachers.length} teachers`);
+                } else {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "Nuk ka mësues në këtë shkollë";
+                    teacherSelect.appendChild(option);
+                    console.log('No teachers found for this school');
+                }
+            } catch (error) {
+                console.error('Error loading teachers:', error);
+                const teacherSelect = document.getElementById('reg-teacher');
+                teacherSelect.innerHTML = '<option value="">Gabim gjatë ngarkimit të mësuesve</option>';
+            }
+        }
+
+        function register() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const role = document.getElementById('reg-role').value;
+            const school = document.getElementById('reg-school').value;
+            const registerMessage = document.getElementById('register-message');
+
+            if (!name || !email || !password || !school || !role) {
+                registerMessage.innerText = "Ju lutem plotësoni të gjitha fushat e kërkuara.";
+                return;
+            }
+
+            const registrationData = { name, email, password, role, school };
+
+            if (role === 'student') {
+                const teacherId = document.getElementById("reg-teacher").value;
+                if (!teacherId) {
+                    registerMessage.innerText = "Ju lutem zgjidhni një mësues.";
+                    return;
+                }
+                registrationData.teacher_id = teacherId;
+            } else if (role === 'teacher') {
+                const classLevel = document.getElementById("reg-teacher-class").value;
+                if (!classLevel) {
+                    registerMessage.innerText = "Ju lutem zgjidhni një klasë.";
+                    return;
+                }
+                registrationData.class_level = classLevel;
+            }
+
+            registerMessage.innerText = "Duke u regjistruar...";
+
+            fetch("http://localhost:5000/api/register", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(registrationData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    registerMessage.innerText = data.error;
+                } else {
+                    registerMessage.innerText = data.message;
+                    document.getElementById('register-container').style.display = 'none';
+                    document.getElementById('verify-container').style.display = 'block';
+                    document.getElementById('verify-email').value = email;
+                    window._lastRegisteredEmail = email;
+                    window._lastRegisteredPassword = password;
+                }
+            })
+            .catch(err => {
+                console.error('Registration failed:', err);
+                registerMessage.innerText = 'Regjistrimi dështoi. Ju lutem provoni përsëri.';
+            });
+        }
+
+        function renderClassButtons() {
+            const container = document.getElementById('class-buttons-container');
+            container.innerHTML = '';
+            classData.forEach(cls => {
+                const card = document.createElement('div');
+                card.className = 'class-card';
+                card.onclick = () => selectClass(cls.grade);
+
+                const img = document.createElement('img');
+                img.src = cls.image;
+                img.alt = cls.label;
+                img.className = 'class-image';
+
+                const label = document.createElement('div');
+                label.className = 'class-label';
+                label.textContent = cls.label;
+
+                card.appendChild(img);
+                card.appendChild(label);
+                container.appendChild(card);
+            });
+        }
+
+        function selectClass(grade) {
+            selectedClass = grade;
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('games-menu').style.display = 'block';
+            
+            const gamesContainer = document.getElementById('games-container');
+            gamesContainer.innerHTML = '';
+
+            // Define games for each class with correct filenames and images
+            const gamesByClass = {
+                1: [
+                    { file: 'mathquiz1', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                    { file: 'wordsearch', title: 'Word Search', image: 'assets/images/word.png' },
+                    { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                ],
+                2: [
+                    { file: 'mathquiz2', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                    { file: 'wordsearch', title: 'Word Search', image: 'assets/images/word.png' },
+                    { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                ],
+                3: [
+                    { file: 'mathquiz3', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                    { file: 'crossword', title: 'Crossword', image: 'assets/images/crossword.jpg' },
+                    { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                ],
+                4: [
+                    { file: 'mathquiz4', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                    { file: 'crossword', title: 'Crossword', image: 'assets/images/crossword.jpg' },
+                    { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                ],
+                5: [
+                    { file: 'mathquiz5', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                    { file: 'peremri', title: 'Përemri', image: 'assets/images/peremri.jpg' },
+                    { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                ]
+            };
+
+            gamesByClass[grade].forEach(game => {
+                addGameButton(game.file, game.title, game.image);
+            });
+            addAssignmentsButton();
+        }
+
+        function addGameButton(game, title, image) {
+            const button = document.createElement('button');
+            button.className = 'game-card';
+            button.onclick = () => startGame(game);
+
+            const img = document.createElement('img');
+            img.src = image;
+            img.alt = title;
+            img.className = 'game-image';
+
+            const label = document.createElement('div');
+            label.className = 'game-label';
+            label.textContent = title;
+
+            button.appendChild(img);
+            button.appendChild(label);
+            document.getElementById('games-container').appendChild(button);
+        }
+
+        function backToClasses() {
+            selectedClass = null;
+            document.getElementById('games-menu').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        }
+
+        function showAssignments() {
+            document.getElementById('games-menu').style.display = 'none';
+            document.getElementById('assignments-container').style.display = 'block';
+            loadStudentAssignments();
+        }
+
+        function backToGames() {
+            document.getElementById('assignments-container').style.display = 'none';
+            document.getElementById('games-menu').style.display = 'block';
+        }
+
+        function startGame(game) {
+            if (!selectedClass) {
+                alert('Ju lutem zgjidhni një klasë fillimisht!');
+                return;
+            }
+            window.location.href = `games/${game}.html`;
+        }
+
+        function verifyCode() {
+            const email = document.getElementById('verify-email').value;
+            const code = document.getElementById('verify-code').value;
+            const verifyMsg = document.getElementById('verify-message');
+            if (!email || !code) {
+                verifyMsg.innerText = 'Ju lutem shkruani kodin e verifikimit!';
+                return;
+            }
+            verifyMsg.innerText = 'Duke verifikuar...';
+            fetch('http://localhost:5000/api/verify-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    verifyMsg.innerText = data.error;
+                } else {
+                    verifyMsg.innerText = 'Email-i u verifikua me sukses! Duke ju kyçur...';
+                    // Login automatik pas verifikimit
+                    autoLoginAfterVerification();
+                }
+            })
+            .catch(err => {
+                verifyMsg.innerText = 'Gabim gjatë verifikimit!';
+            });
+        }
+
+        function resendVerification() {
+            const email = document.getElementById('verify-email').value;
+            const verifyMsg = document.getElementById('verify-message');
+            if (!email) {
+                verifyMsg.innerText = 'Email mungon!';
+                return;
+            }
+            verifyMsg.innerText = 'Duke dërguar kodin përsëri...';
+            fetch('http://localhost:5000/api/resend-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    verifyMsg.innerText = data.error;
+                } else {
+                    verifyMsg.innerText = data.message;
+                }
+            })
+            .catch(err => {
+                verifyMsg.innerText = 'Gabim gjatë dërgimit të kodit!';
+            });
+        }
+
+        function autoLoginAfterVerification() {
+            const email = window._lastRegisteredEmail;
+            const password = window._lastRegisteredPassword;
+            if (!email || !password) return;
+            fetch('http://localhost:5000/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('role', data.role);
+                    document.getElementById('verify-message').innerText = 'U kyçët me sukses!';
+                    if (data.role === 'teacher') {
+                        setTimeout(() => { window.location.href = 'teachers.html'; }, 1000);
+                    } else if (data.role === 'student') {
+                        setTimeout(() => { 
+                            // Hide all auth-related containers
+                            document.getElementById('login-container').style.display = 'none';
+                            document.getElementById('verify-container').style.display = 'none';
+                            document.body.classList.remove('auth-view');
+                            document.body.classList.add('games-view');
+                            loadGames();
+                        }, 1000);
+                    }
+                } else {
+                    document.getElementById('verify-message').innerText = data.error || 'Gabim gjatë kyçjes.';
+                }
+            })
+            .catch(() => {
+                document.getElementById('verify-message').innerText = 'Gabim gjatë kyçjes.';
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            window.location.reload();
+        }
+
+        function addAssignmentsButton() {
+            const container = document.getElementById('games-container');
+            const button = document.createElement('button');
+            button.className = 'game-card';
+            button.onclick = showAssignments;
+
+            const img = document.createElement('img');
+            img.src = 'assets/images/download.png';
+            img.alt = 'Detyrat';
+            img.className = 'game-image';
+
+            const label = document.createElement('div');
+            label.className = 'game-label';
+            label.textContent = 'Detyrat';
+
+            button.appendChild(img);
+            button.appendChild(label);
+            container.appendChild(button);
+        }
+
+        async function loadStudentAssignments() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const assignmentsList = document.getElementById('assignments-list');
+            assignmentsList.innerHTML = '<p>Duke ngarkuar detyrat...</p>';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/assignments', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch assignments');
+                }
+
+                const assignments = await response.json();
+
+                if (assignments.length === 0) {
+                    assignmentsList.innerHTML = '<p>Nuk ka detyra për momentin.</p>';
+                    return;
+                }
+
+                let html = '';
+                assignments.forEach(assignment => {
+                    const deadline = assignment.deadline ? new Date(assignment.deadline) : null;
+                    const deadlineFormatted = deadline ? deadline.toLocaleString('sq-AL') : 'Nuk ka afat';
+                    const isPastDeadline = deadline ? deadline < new Date() : false;
+
+                    html += `
+                        <div class="assignment-item" id="assignment-item-${assignment._id}">
+                            <h4>${assignment.title}</h4>
+                            <p>${assignment.description}</p>
+                            <small>Postuar më: ${new Date(assignment.created_at).toLocaleDateString()}</small><br>
+                            <small>Afati: <strong style="color: ${isPastDeadline ? '#e74c3c' : 'inherit'};">${deadlineFormatted}</strong></small>
+                            
+                            <div class="submission-history" style="margin-top:20px;">
+                                <h5>Historiku i Dorëzimeve</h5>
+                                <div id="history-${assignment._id}">
+                                    <p>Nuk ka dorëzime të mëparshme.</p>
+                                </div>
+                            </div>
+
+                            <div class="submission-form">
+                                ${isPastDeadline 
+                                    ? '<p style="color: #e74c3c; font-weight: bold;">Afati për këtë detyrë ka përfunduar.</p>'
+                                    : `
+                                        <form id="form-${assignment._id}" onsubmit="submitAssignment(event, '${assignment._id}')">
+                                            <textarea name="text" placeholder="Shkruaj përgjigjen tënde..."></textarea>
+                                            <input type="file" name="file">
+                                            <button type="submit">Dorëzo</button>
+                                        </form>
+                                        <p id="submission-status-${assignment._id}" class="submission-status"></p>
+                                    `
+                                }
+                            </div>
+                        </div>
+                    `;
+                });
+                assignmentsList.innerHTML = html;
+
+                assignments.forEach(assignment => {
+                    loadMySubmissions(assignment._id);
+                });
+
+            } catch (error) {
+                assignmentsList.innerHTML = '<p style="color: red;">Gabim në ngarkimin e detyrave.</p>';
+                console.error('Error loading assignments:', error);
+            }
+        }
+
+        async function loadMySubmissions(assignmentId) {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const historyContainer = document.getElementById(`history-${assignmentId}`);
+
+            try {
+                const response = await fetch(`/api/assignments/${assignmentId}/mysubmissions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const attempts = await response.json();
+
+                if (attempts.error) throw new Error(attempts.error);
+
+                if (attempts.length > 0) {
+                    let historyHtml = '';
+                    attempts.reverse().forEach(attempt => {
+                        const date = new Date(attempt.submitted_at).toLocaleString('sq-AL');
+                        historyHtml += `
+                            <div class="submission-item">
+                                <strong>Dorëzuar më: ${date}</strong>
+                                ${attempt.text ? `<p class="submission-text">${attempt.text}</p>` : ''}
+                                ${attempt.file_path ? `<p><a href="/${attempt.file_path.replace(/\\/g, '/')}" target="_blank" class="file-link">Shiko skedarin e bashkëngjitur</a></p>` : ''}
+                            </div>
+                        `;
+                    });
+                    historyContainer.innerHTML = historyHtml;
+                } else {
+                    historyContainer.innerHTML = '<p>Nuk ka dorëzime të mëparshme.</p>';
+                }
+            } catch (error) {
+                historyContainer.innerHTML = `<p style="color:red;">Gabim në ngarkimin e historikut: ${error.message}</p>`;
+            }
+        }
+
+        async function submitAssignment(event, assignmentId) {
+            event.preventDefault();
+            const token = localStorage.getItem('token');
+            const form = document.getElementById(`form-${assignmentId}`);
+            const statusP = document.getElementById(`submission-status-${assignmentId}`);
+            
+            const formData = new FormData(form);
+            
+            statusP.textContent = 'Duke dorëzuar...';
+            statusP.style.color = 'blue';
+
+            try {
+                const response = await fetch(`/api/assignments/${assignmentId}/submit`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to submit assignment');
+                }
+
+                statusP.textContent = 'Detyra u dorëzua me sukses!';
+                statusP.style.color = 'green';
+                
+                // Refresh submission history
+                loadMySubmissions(assignmentId);
+                
+                // Clear form
+                form.reset();
+
+            } catch (error) {
+                statusP.textContent = `Gabim: ${error.message}`;
+                statusP.style.color = 'red';
+            }
+        }
+
+        function debugTeachers() {
+            console.log('Debug teachers function called');
+            fetch('http://localhost:5000/api/debug/teachers')
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Debug teachers response:', data);
+                    if (data.all_teachers && data.all_teachers.length > 0) {
+                        alert(`Gjetën ${data.count} mësues në databazë:\n${data.all_teachers.map(t => `${t.name} - ${t.school} (Klasa ${t.class_level})`).join('\n')}`);
+                    } else {
+                        alert('Nuk ka mësues në databazë!');
+                    }
+                })
+                .catch(err => {
+                    console.error('Debug teachers error:', err);
+                    alert('Gabim gjatë kontrollit të mësuesve: ' + err.message);
+                });
+        }
+    </script>
+</body>
+</html> 

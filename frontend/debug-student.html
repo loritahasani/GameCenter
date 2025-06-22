@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Debug Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+        #login-section { margin-bottom: 20px; }
+        input { padding: 8px; margin-right: 10px; }
+        button { padding: 8px 12px; }
+        h1, h2 { color: #333; }
+        pre { background-color: #f4f4f4; padding: 15px; border-radius: 5px; border: 1px solid #ddd; white-space: pre-wrap; word-wrap: break-word; }
+        .result-block { margin-top: 20px; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Student Debug Page</h1>
+    <div id="login-section">
+        <input type="email" id="email" placeholder="Student Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="runDebug()">Run Debug</button>
+    </div>
+    <hr>
+    <div id="results"></div>
+
+    <script>
+        async function runDebug() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            if (!email || !password) {
+                resultsDiv.innerHTML = '<p class="error">Please enter both email and password.</p>';
+                return;
+            }
+
+            try {
+                // 1. Login and get token
+                resultsDiv.innerHTML += '<h2>Step 1: Logging in...</h2>';
+                const loginRes = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const loginData = await loginRes.json();
+                if (loginData.error) {
+                    resultsDiv.innerHTML += `<p class="error">Login Failed: ${loginData.error}</p>`;
+                    return;
+                }
+                const token = loginData.token;
+                resultsDiv.innerHTML += '<p>Login successful. Token received.</p>';
+
+                // 2. Get student data with /api/me
+                resultsDiv.innerHTML += '<h2>Step 2: Fetching student data with /api/me...</h2>';
+                const meRes = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                const studentData = await meRes.json();
+                resultsDiv.innerHTML += `<div class="result-block"><h3>Student Data:</h3><pre>${JSON.stringify(studentData, null, 2)}</pre></div>`;
+                if (studentData.error || !studentData._id) {
+                     resultsDiv.innerHTML += `<p class="error">Could not fetch student data.</p>`;
+                     return;
+                }
+                 if (!studentData.teacher_id) {
+                    resultsDiv.innerHTML += `<p class="error">Error: This student is not associated with a teacher (teacher_id is missing).</p>`;
+                    return;
+                }
+
+                // 3. Get teacher data
+                resultsDiv.innerHTML += '<h2>Step 3: Fetching teacher data...</h2>';
+                const teacherRes = await fetch(`/api/teachers?id=${studentData.teacher_id}`);
+                const teacherData = await teacherRes.json();
+                resultsDiv.innerHTML += `<div class="result-block"><h3>Teacher Data:</h3><pre>${JSON.stringify(teacherData, null, 2)}</pre></div>`;
+                 if (teacherData.error || !teacherData[0]) {
+                    resultsDiv.innerHTML += `<p class="error">Could not fetch teacher data for ID: ${studentData.teacher_id}</p>`;
+                    return;
+                }
+                 const classLevel = teacherData[0].class_level;
+                 resultsDiv.innerHTML += `<p>Teacher's class level is: <strong>${classLevel}</strong></p>`;
+
+
+                // 4. Get games list
+                resultsDiv.innerHTML += '<h2>Step 4: Fetching game list with /api/my-games...</h2>';
+                const gamesRes = await fetch('/api/my-games', { headers: { 'Authorization': `Bearer ${token}` } });
+                const gamesData = await gamesRes.json();
+                resultsDiv.innerHTML += `<div class="result-block"><h3>Game List Received from API:</h3><pre>${JSON.stringify(gamesData, null, 2)}</pre></div>`;
+
+                // 5. Final conclusion
+                resultsDiv.innerHTML += '<h2>Step 5: Conclusion</h2>';
+                if (gamesData.games && gamesData.games.length > 0) {
+                    resultsDiv.innerHTML += `<p style="color: green; font-weight: bold;">Success! The backend is correctly sending a list of ${gamesData.games.length} games for class ${classLevel}. The issue might be on the main page's rendering logic.</p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p class="error">Failure! The backend is not returning any games for class ${classLevel}. The issue is in the backend logic.</p>`;
+                }
+
+            } catch (err) {
+                resultsDiv.innerHTML += `<p class="error">A critical error occurred: ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

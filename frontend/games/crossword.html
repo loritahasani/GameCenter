@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <title>Fjalëkryqi</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <!-- Profili i nxënësit -->
+  <div id="profile-icon" style="display:none; position: absolute; top: 20px; right: 30px; cursor: pointer; z-index: 1000;">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+          <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+          <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+      </svg>
+  </div>
+  <!-- Modal i profilit -->
+  <div id="profile-modal" style="display:none; position: fixed; top: 70px; right: 30px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 20px; min-width: 220px; z-index: 2000; color: #333; text-shadow: none;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+          <svg width="50" height="50" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+              <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+              <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+          </svg>
+          <div>
+              <div id="profile-username" style="font-weight: bold;">Emri</div>
+              <div id="profile-email" style="font-size: 0.9em; color: #888;">Email</div>
+          </div>
+      </div>
+      <hr style="margin: 15px 0;">
+      <div>Pikët: <span id="profile-score">0</span></div>
+      <button onclick="logout()" style="margin-top: 15px; width: 100%; background: #e74c3c; color: #fff; border: none; border-radius: 5px; padding: 8px 0; cursor: pointer;">Dil</button>
+  </div>
+
+<div id="login-container">
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <p id="login-message" style="color:red;"></p>
+</div>
+
+<div id="menu" style="display:none;">
+  <div class="math-quiz-menu">
+    <span class="game-icon">✏️</span>
+    <h1>Fjalëkryqi</h1>
+    <br>
+    <button class="start-btn play-button" onclick="startGame()">Start</button>
+  </div>
+</div>
+
+<div id="crossword-section" style="display:none;" class="crossword-container-new">
+  <h1>Fjalëkryqi</h1>
+  <div class="crossword-body-new">
+    <div class="crossword-grid-new" id="grid"></div>
+    <div class="crossword-clues-new">
+        <div class="clue-list-new" id="across-clues">
+            <h3>Horizontalisht</h3>
+        </div>
+        <div class="clue-list-new" id="down-clues">
+            <h3>Vertikalisht</h3>
+        </div>
+    </div>
+  </div>
+  <div class="crossword-btns-new">
+    <button id="check-button" class="play-button" onclick="checkAnswers()">Kontrollo</button>
+    <button id="reveal-word-button" class="play-button" onclick="revealWord()">Zbulo Fjalën</button>
+    <button id="reveal-all-button" class="play-button" onclick="revealAll()">Zbulo të Gjitha</button>
+    <button id="restart-button" class="memory-reset-button" onclick="startGame()" style="display:none;">Rifillo</button>
+  </div>
+  <div id="result" class="memory-game-message"></div>
+</div>
+
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/crossword.js"></script>
+
+</body>
+</html>
