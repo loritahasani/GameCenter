@@ -7,8 +7,6 @@ from config.routes.auth import auth_bp
 from config.routes.scores import scores_bp
 from config.routes.assignments import assignments_bp
 
-mongo = PyMongo()
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -16,7 +14,7 @@ def create_app():
     # Initialize extensions
     CORS(app)
     JWTManager(app)
-    mongo.init_app(app)
+    mongo = PyMongo(app)
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api')

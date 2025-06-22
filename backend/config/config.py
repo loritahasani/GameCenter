@@ -3,6 +3,9 @@ import os
 
 class Config:
     MONGO_URI = os.environ.get('MONGODB_URI', "mongodb://localhost:27017/gamecenter")
+    MONGODB_SETTINGS = {
+        'host': os.environ.get('MONGODB_URI', "mongodb://localhost:27017/gamecenter")
+    }
     SECRET_KEY = os.environ.get('SECRET_KEY', "sekreti-i-fshehtë")  # Change in production
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=5)
     
