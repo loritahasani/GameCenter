@@ -1,3 +1,8 @@
+// API Configuration
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:5000/api' 
+    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
+
 // Authentication functions
 let token = localStorage.getItem("token");
 const loginContainer = document.getElementById("login-container");
@@ -34,11 +39,6 @@ if (token) {
     }
 }
 
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:5000/api' 
-    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
-
 // Test server connection
 fetch(`${API_BASE_URL}/test`)
     .then(res => res.json())
@@ -55,7 +55,6 @@ fetch(`${API_BASE_URL}/test`)
         }
     });
 
-// Update all fetch calls to use API_BASE_URL
 async function login() {
     const email = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -124,14 +123,12 @@ function loadUserScores() {
                     let displayScore = 0;
                     
                     if (Array.isArray(gameScores)) {
-                        // If it's an array of attempts, sum all scores
                         for (const attempt of gameScores) {
                             if (attempt.score) {
                                 displayScore += attempt.score;
                             }
                         }
                     } else if (typeof gameScores === 'number') {
-                        // If it's a single number (old format)
                         displayScore = gameScores;
                     }
                     
@@ -191,7 +188,6 @@ function sendScoreToBackend(game, points) {
     });
 }
 
-// PROFILI: Shfaq/Fsheh ikonën dhe modalin e profilit
 function showProfileIconIfLoggedIn() {
     const token = localStorage.getItem('token');
     const icon = document.getElementById('profile-icon');
@@ -208,7 +204,6 @@ function fillProfileModal(user, scores) {
     document.getElementById('profile-score').innerText = scores?.total || 0;
 }
 
-// Merr të dhënat e përdoruesit nga backend-i
 function fetchUserProfileAndScores() {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -224,17 +219,14 @@ function fetchUserProfileAndScores() {
         .then(data => {
             let total = 0;
             if (data.scores) {
-                // Handle new score structure where scores are arrays of attempts
                 for (const gameScores of Object.values(data.scores)) {
                     if (Array.isArray(gameScores)) {
-                        // If it's an array of attempts, sum all scores
                         for (const attempt of gameScores) {
                             if (attempt.score) {
                                 total += attempt.score;
                             }
                         }
                     } else if (typeof gameScores === 'number') {
-                        // If it's a single number (old format)
                         total += gameScores;
                     }
                 }
@@ -244,7 +236,6 @@ function fetchUserProfileAndScores() {
     });
 }
 
-// Event listeners për profilin
 window.addEventListener('DOMContentLoaded', function() {
     showProfileIconIfLoggedIn();
     const icon = document.getElementById('profile-icon');
@@ -263,32 +254,27 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Logout function
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('name');
     localStorage.removeItem('userClass');
-    // Redirect to index.html, which is in the parent directory
-    window.location.href = './index.html'; 
+    if (window.location.pathname.includes('/games/')) {
+        window.location.href = "../index.html";
+    } else {
+        window.location.href = "index.html";
+    }
 }
 
-// Go back to games list function
 function goBackToGames() {
     console.log('goBackToGames called');
-    
-    // Set a simple flag in localStorage
     localStorage.setItem('forceShowGames', 'true');
-    
-    // Check if we're in a game file (in games/ directory)
     if (window.location.pathname.includes('/games/')) {
         console.log('In game file, redirecting to index.html');
-        // If we're in a game file, go back to index.html with timestamp to prevent caching
         window.location.replace("../index.html?t=" + Date.now());
     } else {
         console.log('In main directory, reloading');
-        // If we're in the main directory, just reload to show games
-        window.location.reload(true); // Force reload from server
+        window.location.reload(true);
     }
 }
 
@@ -339,4 +325,4 @@ function toggleForms() {
 
 function populateClassButtons() {
     // Implementation of populateClassButtons function
-} 
+}
