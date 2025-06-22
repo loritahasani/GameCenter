@@ -49,7 +49,9 @@ fetch(`${API_BASE_URL}/test`)
     .then(data => {
         if (data.error) {
             console.error("Server error:", data.error);
-            loginMessage.innerText = "Server error: " + data.error;
+            if (loginMessage) {
+                loginMessage.innerText = "Server error: " + data.error;
+            }
         }
     })
     .catch(err => {
