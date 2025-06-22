@@ -64,157 +64,162 @@
 
 <script src="../assets/js/auth.js"></script>
 <script>
-    const emojis = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍒', '🍍', '🍊', '🍏', '🍑'];
+// API Configuration
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:5000/api' 
+    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
 
-    let cards = [];
-    let flipped = [];
-    let matched = [];
-    let score = 0;
-    let moves = 0;
+const emojis = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍒', '🍍', '🍊', '🍏', '🍑'];
 
-    function startGame() {
-        document.getElementById('menu').style.display = 'none';
-        document.getElementById('game').style.display = 'block';
-        document.getElementById('game-message').textContent = '';
-        score = 0;
-        moves = 0;
-        resetGame();
+let cards = [];
+let flipped = [];
+let matched = [];
+let score = 0;
+let moves = 0;
+
+function startGame() {
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('game-message').textContent = '';
+    score = 0;
+    moves = 0;
+    resetGame();
+}
+
+function generateUniqueCards() {
+    let cardEmojis = [];
+    emojis.forEach(emoji => {
+        cardEmojis.push(emoji, emoji);
+    });
+    shuffle(cardEmojis);
+    return cardEmojis;
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
+}
 
-    function generateUniqueCards() {
-        let cardEmojis = [];
-        emojis.forEach(emoji => {
-            cardEmojis.push(emoji, emoji);
-        });
-        shuffle(cardEmojis);
-        return cardEmojis;
-    }
+function createCard(value) {
+    const btn = document.createElement("button");
+    btn.textContent = "❓";
+    btn.className = "memory-card";
+    btn.disabled = false;
 
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
+    btn.addEventListener("click", () => {
+        if (flipped.length < 2 && !flipped.includes(btn)) {
+            btn.textContent = value;
+            flipped.push(btn);
+            moves++;
 
-    function createCard(value) {
-        const btn = document.createElement("button");
-        btn.textContent = "❓";
-        btn.className = "memory-card";
-        btn.disabled = false;
-
-        btn.addEventListener("click", () => {
-            if (flipped.length < 2 && !flipped.includes(btn)) {
-                btn.textContent = value;
-                flipped.push(btn);
-                moves++;
-
-                if (flipped.length === 2) {
-                    setTimeout(checkMatch, 500);
-                }
+            if (flipped.length === 2) {
+                setTimeout(checkMatch, 500);
             }
-        });
-
-        board.appendChild(btn);
-    }
-
-    function checkMatch() {
-        const [card1, card2] = flipped;
-        if (card1.textContent === card2.textContent) {
-            matched.push(card1, card2);
-            card1.disabled = true;
-            card2.disabled = true;
-            score += 10;
-        } else {
-            setTimeout(() => {
-                card1.textContent = "❓";
-                card2.textContent = "❓";
-            }, 500);
         }
-        flipped = [];
+    });
 
-        if (matched.length === cards.length) {
-            const finalScore = Math.max(0, score - moves);
-            document.getElementById("game-message").textContent = `Urime! I gjete të gjitha çiftet! Pikët: ${finalScore}`;
-            sendScoreToBackend("memorygame", finalScore);
-            showConfetti();
-            setTimeout(() => {
-                document.getElementById('game').style.display = 'none';
-                document.getElementById('menu').style.display = 'block';
-                loadUserScores();
-            }, 2000);
+    board.appendChild(btn);
+}
+
+function checkMatch() {
+    const [card1, card2] = flipped;
+    if (card1.textContent === card2.textContent) {
+        matched.push(card1, card2);
+        card1.disabled = true;
+        card2.disabled = true;
+        score += 10;
+    } else {
+        setTimeout(() => {
+            card1.textContent = "❓";
+            card2.textContent = "❓";
+        }, 500);
+    }
+    flipped = [];
+
+    if (matched.length === cards.length) {
+        const finalScore = Math.max(0, score - moves);
+        document.getElementById("game-message").textContent = `Urime! I gjete të gjitha çiftet! Pikët: ${finalScore}`;
+        sendScoreToBackend("memorygame", finalScore);
+        showConfetti();
+        setTimeout(() => {
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+            loadUserScores();
+        }, 2000);
+    }
+}
+
+function resetGame() {
+    document.getElementById("game-message").textContent = "";
+    board.innerHTML = "";
+    flipped = [];
+    matched = [];
+    cards = generateUniqueCards();
+    shuffle(cards);
+    cards.forEach(createCard);
+}
+
+function loadUserScores() {
+    if (!token) return;
+    fetch(`${API_BASE_URL}/get-scores`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
         }
-    }
-
-    function resetGame() {
-        document.getElementById("game-message").textContent = "";
-        board.innerHTML = "";
-        flipped = [];
-        matched = [];
-        cards = generateUniqueCards();
-        shuffle(cards);
-        cards.forEach(createCard);
-    }
-
-    function loadUserScores() {
-        if (!token) return;
-        fetch("http://localhost:5000/api/get-scores", {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        })
-        .then(res => {
-            if (!res.ok) {
-                throw new Error('Failed to load scores');
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data.scores) {
-                const scoresDiv = document.getElementById("my-scores");
-                if (scoresDiv) {
-                    scoresDiv.innerHTML = "";
-                    if (data.scores.memorygame) {
-                        let displayScore = 0;
-                        if (Array.isArray(data.scores.memorygame)) {
-                            // If it's an array of attempts, sum all scores
-                            for (const attempt of data.scores.memorygame) {
-                                if (attempt.score) {
-                                    displayScore += attempt.score;
-                                }
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Failed to load scores');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.scores) {
+            const scoresDiv = document.getElementById("my-scores");
+            if (scoresDiv) {
+                scoresDiv.innerHTML = "";
+                if (data.scores.memorygame) {
+                    let displayScore = 0;
+                    if (Array.isArray(data.scores.memorygame)) {
+                        // If it's an array of attempts, sum all scores
+                        for (const attempt of data.scores.memorygame) {
+                            if (attempt.score) {
+                                displayScore += attempt.score;
                             }
-                        } else if (typeof data.scores.memorygame === 'number') {
-                            // If it's a single number (old format)
-                            displayScore = data.scores.memorygame;
                         }
-                        const scoreElement = document.createElement("p");
-                        scoreElement.textContent = `Pikët e Mia: ${displayScore}`;
-                        scoresDiv.appendChild(scoreElement);
-                    } else {
-                        scoresDiv.textContent = "Nuk ka pikë për këtë lojë.";
+                    } else if (typeof data.scores.memorygame === 'number') {
+                        // If it's a single number (old format)
+                        displayScore = data.scores.memorygame;
                     }
+                    const scoreElement = document.createElement("p");
+                    scoreElement.textContent = `Pikët e Mia: ${displayScore}`;
+                    scoresDiv.appendChild(scoreElement);
+                } else {
+                    scoresDiv.textContent = "Nuk ka pikë për këtë lojë.";
                 }
             }
-        })
-        .catch(err => {
-            console.error("Error loading scores:", err);
-            if (err.message === 'Failed to load scores') {
-                localStorage.removeItem("token");
-                window.location.reload();
-            }
-        });
-    }
-
-    function showConfetti() {
-        const confetti = document.getElementById('confetti');
-        if (confetti) {
-            confetti.style.display = 'block';
-            confetti.innerHTML = '🎉🎊✨';
-            setTimeout(() => { confetti.style.display = 'none'; confetti.innerHTML = ''; }, 1800);
         }
-    }
+    })
+    .catch(err => {
+        console.error("Error loading scores:", err);
+        if (err.message === 'Failed to load scores') {
+            localStorage.removeItem("token");
+            window.location.reload();
+        }
+    });
+}
 
-    const board = document.getElementById("memory-game-board");
+function showConfetti() {
+    const confetti = document.getElementById('confetti');
+    if (confetti) {
+        confetti.style.display = 'block';
+        confetti.innerHTML = '🎉🎊✨';
+        setTimeout(() => { confetti.style.display = 'none'; confetti.innerHTML = ''; }, 1800);
+    }
+}
+
+const board = document.getElementById("memory-game-board");
 </script>
 
 </body>
