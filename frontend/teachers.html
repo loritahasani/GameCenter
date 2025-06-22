@@ -89,45 +89,54 @@
 
     <script src="assets/js/auth.js"></script>
     <script>
-        // openTab function is already defined in auth.js
-        
-        function openAssignmentModal() {
-            document.getElementById('assignment-modal').style.display = 'flex';
-        }
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // openTab function is already defined in auth.js
+            
+            function openAssignmentModal() {
+                document.getElementById('assignment-modal').style.display = 'flex';
+            }
 
-        function closeAssignmentModal() {
-            document.getElementById('assignment-modal').style.display = 'none';
-        }
+            function closeAssignmentModal() {
+                document.getElementById('assignment-modal').style.display = 'none';
+            }
 
-        function openEditAssignmentModal(assignmentId) {
-            const token = localStorage.getItem('token');
-            fetch(`${API_BASE_URL}/assignments/${assignmentId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            .then(res => res.json())
-            .then(assignment => {
-                if (assignment.error) {
-                    alert('Error: ' + assignment.error);
-                    return;
-                }
-                document.getElementById('edit-assignment-id').value = assignment._id;
-                document.getElementById('edit-assignment-title').value = assignment.title;
-                document.getElementById('edit-assignment-description').value = assignment.description;
-                if (assignment.deadline) {
-                    // Format for datetime-local input: YYYY-MM-DDTHH:mm
-                    const deadline = new Date(assignment.deadline);
-                    const formattedDeadline = deadline.toISOString().slice(0, 16);
-                    document.getElementById('edit-assignment-deadline').value = formattedDeadline;
-                } else {
-                    document.getElementById('edit-assignment-deadline').value = '';
-                }
-                document.getElementById('edit-assignment-modal').style.display = 'flex';
-            });
-        }
+            function openEditAssignmentModal(assignmentId) {
+                const token = localStorage.getItem('token');
+                fetch(`${API_BASE_URL}/assignments/${assignmentId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => res.json())
+                .then(assignment => {
+                    if (assignment.error) {
+                        alert('Error: ' + assignment.error);
+                        return;
+                    }
+                    document.getElementById('edit-assignment-id').value = assignment._id;
+                    document.getElementById('edit-assignment-title').value = assignment.title;
+                    document.getElementById('edit-assignment-description').value = assignment.description;
+                    if (assignment.deadline) {
+                        // Format for datetime-local input: YYYY-MM-DDTHH:mm
+                        const deadline = new Date(assignment.deadline);
+                        const formattedDeadline = deadline.toISOString().slice(0, 16);
+                        document.getElementById('edit-assignment-deadline').value = formattedDeadline;
+                    } else {
+                        document.getElementById('edit-assignment-deadline').value = '';
+                    }
+                    document.getElementById('edit-assignment-modal').style.display = 'flex';
+                });
+            }
 
-        function closeEditAssignmentModal() {
-            document.getElementById('edit-assignment-modal').style.display = 'none';
-        }
+            function closeEditAssignmentModal() {
+                document.getElementById('edit-assignment-modal').style.display = 'none';
+            }
+
+            // Make functions globally available
+            window.openAssignmentModal = openAssignmentModal;
+            window.closeAssignmentModal = closeAssignmentModal;
+            window.openEditAssignmentModal = openEditAssignmentModal;
+            window.closeEditAssignmentModal = closeEditAssignmentModal;
+        });
 
         document.getElementById('assignment-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -379,3 +388,22 @@
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error deleting assignment: ' + data.error);
+                } else {
+                    alert(data.message);
+                    loadAssignments();
+                }
+            })
+            .catch(err => {
+                console.error('Failed to delete assignment:', err);
+                alert('An error occurred. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>
