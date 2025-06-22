@@ -18,10 +18,13 @@ if (!localStorage.getItem('token') && !window.location.pathname.endsWith('index.
 if (token) {
     // User is logged in, keep login container hidden
     if (window.location.pathname.includes('teachers.html')) {
-        document.getElementById('scores-container').style.display = 'block';
-        loadScores();
+        const scoresContainer = document.getElementById('scores-container');
+        if (scoresContainer) {
+            scoresContainer.style.display = 'block';
+            loadScores();
+        }
     } else {
-        menu.style.display = "block";
+        if (menu) menu.style.display = "block";
         loadUserScores();
         showProfileIconIfLoggedIn();
         if (typeof loadGames === 'function') {
@@ -34,8 +37,9 @@ if (token) {
         loginContainer.style.display = "block";
     }
     if (menu) menu.style.display = "none";
-    if (document.getElementById('scores-container')) {
-        document.getElementById('scores-container').style.display = "none";
+    const scoresContainer = document.getElementById('scores-container');
+    if (scoresContainer) {
+        scoresContainer.style.display = "none";
     }
 }
 
@@ -324,5 +328,159 @@ function toggleForms() {
 }
 
 function populateClassButtons() {
-    // Implementation of populateClassButtons function
+    const container = document.getElementById('class-buttons-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    classData.forEach(classInfo => {
+        const button = document.createElement('div');
+        button.className = 'class-card';
+        button.innerHTML = `
+            <img src="${classInfo.image}" alt="${classInfo.label}">
+            <h3>${classInfo.label}</h3>
+        `;
+        button.onclick = () => selectClass(classInfo.grade);
+        container.appendChild(button);
+    });
+}
+
+// Teacher panel functions
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tab-button");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+    
+    // Load assignments when assignments tab is opened
+    if (tabName === 'assignments-tab') {
+        loadAssignments();
+    }
+    // Load student assignments when student assignments tab is opened
+    if (tabName === 'student-assignments-tab') {
+        loadStudentAssignments();
+    }
+}
+
+function loadScores() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'index.html';
+        return;
+    }
+    fetch(`${API_BASE_URL}/get-scores`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const listDiv = document.getElementById('students-list');
+        const detailDiv = document.getElementById('student-detail');
+        const modalBg = document.getElementById('student-detail-modal-bg');
+        if (listDiv) listDiv.innerHTML = '';
+        if (detailDiv) detailDiv.style.display = 'none';
+        if (modalBg) modalBg.style.display = 'none';
+        if (detailDiv) detailDiv.innerHTML = '';
+        
+        if (data.students && data.students.length > 0) {
+            let table = '<table class="scores-table"><thead><tr><th>Emri</th><th>Email</th><th>Detaje</th></tr></thead><tbody>';
+            data.students.forEach(student => {
+                table += `<tr><td>${student.name}</td><td>${student.email || ''}</td><td><button class='btn btn-primary btn-small' onclick=\"showStudentDetail('${student._id}')\">Shiko</button></td></tr>`;
+            });
+            table += '</tbody></table>';
+            if (listDiv) listDiv.innerHTML = table;
+        } else {
+            if (listDiv) listDiv.innerHTML = '<p>Nuk ka nxënës të regjistruar.</p>';
+        }
+    })
+    .catch(err => {
+        console.error('Error loading scores:', err);
+        if (err.message === 'Failed to load scores') {
+            localStorage.removeItem('token');
+            window.location.reload();
+        }
+    });
+}
+
+function loadAssignments() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    fetch(`${API_BASE_URL}/assignments`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(res => res.json())
+    .then(assignments => {
+        const assignmentsList = document.getElementById('assignments-list');
+        if (!assignmentsList) return;
+        
+        if (assignments.length > 0) {
+            let html = '<div style="display: grid; gap: 15px;">';
+            assignments.forEach(assignment => {
+                const date = new Date(assignment.created_at).toLocaleDateString('sq-AL');
+                const deadline = assignment.deadline ? new Date(assignment.deadline).toLocaleString('sq-AL') : 'Nuk ka';
+                html += `
+                    <div class="assignment-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <h4>${assignment.title}</h4>
+                                <p>${assignment.description}</p>
+                                <small>Krijuar më: ${date}</small><br>
+                                <small>Afati: <strong>${deadline}</strong></small>
+                            </div>
+                            <div class="assignment-actions">
+                                <button onclick="openEditAssignmentModal('${assignment._id}')" class="btn btn-warning btn-small">
+                                    Ndrysho
+                                </button>
+                                <button onclick="viewSubmissions('${assignment._id}')" class="btn btn-info btn-small">
+                                    Shiko Dorëzimet
+                                </button>
+                                <button onclick="deleteAssignment('${assignment._id}', '${assignment.title}')" class="btn btn-danger btn-small">
+                                    Fshi
+                                </button>
+                            </div>
+                        </div>
+                        <div id="submissions-${assignment._id}" class="submissions-container" style="display:none; margin-top: 15px;"></div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            assignmentsList.innerHTML = html;
+        } else {
+            assignmentsList.innerHTML = '<p>Nuk ka ende detyra të shtuara.</p>';
+        }
+    })
+    .catch(err => {
+        console.error('Error loading assignments:', err);
+        const assignmentsList = document.getElementById('assignments-list');
+        if (assignmentsList) {
+            assignmentsList.innerHTML = '<p style="color: red;">Gabim në ngarkimin e detyrave.</p>';
+        }
+    });
+}
+
+// Initialize teacher panel when page loads
+if (window.location.pathname.includes('teachers.html')) {
+    window.onload = function() {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const loginContainer = document.getElementById('login-container');
+            const teacherPanel = document.getElementById('teacher-panel-container');
+            if (loginContainer) loginContainer.style.display = 'none';
+            if (teacherPanel) teacherPanel.style.display = 'block';
+            loadScores();
+        }
+    };
 }
