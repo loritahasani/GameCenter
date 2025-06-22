@@ -21,6 +21,11 @@ def test():
     except Exception as e:
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
+@auth_bp.route("/simple-test", methods=["GET"])
+def simple_test():
+    """Simple test route without MongoDB"""
+    return jsonify({"message": "Auth blueprint is working!"}), 200
+
 @auth_bp.route("/test-login", methods=["POST"])
 def test_login():
     """Debug route to test login functionality"""
