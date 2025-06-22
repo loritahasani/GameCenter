@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paneli i Mësuesit</title>
+    <title>Gjeniu i vogël - Paneli i Mësuesit</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
 </head>
 <body>
@@ -18,35 +19,34 @@
         </div>
     </div>
 
-    <div id="teacher-panel-container" style="display: none;">
-        <div class="teacher-panel-header">
-            <h2>Paneli i Mësuesit</h2>
-            <div class="tabs">
-                <button class="btn btn-info tab-button active" onclick="openTab(event, 'scores-tab')">Pikët e Nxënësve</button>
-                <button class="btn btn-info tab-button" onclick="openTab(event, 'assignments-tab')">Detyrat</button>
+    <div id="teacher-panel-container" style="display: none; min-height: 90vh; display: flex; flex-direction: column; margin-top: 50px;">
+        <div style="flex: 1 1 auto;">
+            <div class="teacher-panel-header">
+                <h2>Paneli i Mësuesit</h2>
+                <div class="tabs">
+                    <button class="btn btn-info tab-button active" onclick="openTab(event, 'scores-tab')">Pikët e Nxënësve</button>
+                    <button class="btn btn-info tab-button" onclick="openTab(event, 'assignments-tab')">Detyrat</button>
+                </div>
+            </div>
+
+            <div id="scores-tab" class="tab-content" style="display: block;">
+                <div id="students-list"></div>
+            </div>
+
+            <div id="assignments-tab" class="tab-content">
+                <div class="assignments-header">
+                    <h3>Detyrat</h3>
+                    <button onclick="openAssignmentModal()" class="add-assignment-btn">Shto Detyrë të Re</button>
+                </div>
+                <div id="assignments-list">
+                    <!-- Assignments will be listed here -->
+                    <p>Nuk ka ende detyra të shtuara.</p>
+                </div>
             </div>
         </div>
-
-        <div id="scores-tab" class="tab-content" style="display: block;">
-            <div id="students-list"></div>
+        <div style="text-align: center; margin-top: 80px; padding: 20px;">
+            <button class="btn btn-danger btn-large" onclick="logout()">Dilni</button>
         </div>
-
-        <div id="assignments-tab" class="tab-content">
-            <div class="assignments-header">
-                <h3>Menaxhimi i Detyrave</h3>
-                <button class="btn btn-success" onclick="openAssignmentModal()">Shto Detyrë të Re</button>
-            </div>
-            <div id="assignments-list">
-                <!-- Assignments will be listed here -->
-                <p>Nuk ka ende detyra të shtuara.</p>
-            </div>
-        </div>
-
-    </div>
-    
-    <!-- Butoni "Dilni" në fund të faqes -->
-    <div style="text-align: center; margin-top: 30px; padding: 20px;">
-        <button class="btn btn-danger btn-large" onclick="logout()">Dilni</button>
     </div>
 
     <!-- Assignment Creation Modal -->
@@ -85,7 +85,7 @@
     </div>
 
     <div id="student-detail-modal-bg" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:2000;"></div>
-    <div id="student-detail" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; border-radius:12px; box-shadow:0 4px 32px rgba(0,0,0,0.25); min-width:320px; max-width:90vw; padding:32px 24px; z-index:2100;"></div>
+    <div id="student-detail" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: rgba(42, 82, 152, 0.9); border-radius:12px; box-shadow:0 4px 32px rgba(0,0,0,0.25); min-width:320px; max-width:90vw; padding:32px 24px; z-index:2100;"></div>
 
     <script src="assets/js/auth.js"></script>
     <script>
@@ -122,7 +122,7 @@
 
         function openEditAssignmentModal(assignmentId) {
             const token = localStorage.getItem('token');
-            fetch(`/api/assignments/${assignmentId}`, {
+            fetch(`http://localhost:5000/api/assignments/${assignmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => res.json())
@@ -157,7 +157,7 @@
             const deadline = document.getElementById('assignment-deadline').value;
             const token = localStorage.getItem('token');
 
-            fetch('/api/assignments', {
+            fetch('http://localhost:5000/api/assignments', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -192,7 +192,7 @@
             const deadline = document.getElementById('edit-assignment-deadline').value;
             const token = localStorage.getItem('token');
 
-            fetch(`/api/assignments/${assignmentId}`, {
+            fetch(`http://localhost:5000/api/assignments/${assignmentId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -223,7 +223,7 @@
                 return;
             }
 
-            fetch('/api/assignments', {
+            fetch('http://localhost:5000/api/assignments', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -284,7 +284,7 @@
             container.style.display = 'block';
             
             const token = localStorage.getItem('token');
-            fetch(`/api/assignments/${assignmentId}/submissions`, {
+            fetch(`http://localhost:5000/api/assignments/${assignmentId}/submissions`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => res.json())
@@ -293,34 +293,100 @@
                     throw new Error(submissions.error);
                 }
 
+                console.log('DEBUG: Submissions received:', submissions);
+
                 if (submissions.length === 0) {
                     container.innerHTML = '<p>Nuk ka ende dorëzime për këtë detyrë.</p>';
                     return;
                 }
 
                 let html = '<h5>Dorëzimet e Nxënësve:</h5>';
-                submissions.forEach(sub => {
-                    html += `<div class="submission-item"><strong>${sub.student_name}</strong>`;
-                    if (sub.attempts && sub.attempts.length > 0) {
-                        sub.attempts.forEach(attempt => {
-                            const date = new Date(attempt.submitted_at).toLocaleString('sq-AL');
-                            html += `
-                                <div class="submission-attempt">
-                                    <small>Dorëzuar më: ${date}</small>
-                                    ${attempt.text ? `<p class="submission-text">${attempt.text}</p>` : ''}
-                                    ${attempt.file_path ? `<p><a href="/${attempt.file_path.replace(/\\/g, '/')}" target="_blank" class="file-link">Shiko skedarin e bashkëngjitur</a></p>` : ''}
-                                </div>
-                            `;
-                        });
-                    } else {
-                        html += '<p>Ky nxënës nuk ka dorëzuar ende.</p>';
+                submissions.forEach(submission => {
+                    console.log('DEBUG: Processing submission:', submission);
+                    const date = new Date(submission.submitted_at).toLocaleString('sq-AL');
+                    html += `
+                        <div class="submission-item" style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #2a5298;">
+                            <strong>Nxënësi:</strong> ${submission.student_name || 'E panjohur'}<br>
+                            <strong>Data e dorëzimit:</strong> ${date}<br>
+                    `;
+                    
+                    if (submission.message) {
+                        html += `<strong>Mesazhi:</strong> ${submission.message}<br>`;
                     }
-                    html += `</div>`;
+                    
+                    if (submission.filename) {
+                        html += `<strong>Skedari:</strong> ${submission.filename}<br>`;
+                        if (submission.file_path) {
+                            html += `<button onclick="downloadSubmission('${submission._id}')" class="btn btn-primary btn-small" style="margin-top: 5px;">
+                                <i class="fas fa-download"></i> Shkarko Skedarin
+                            </button>`;
+                        } else {
+                            html += `<small style="color: #e74c3c; display: block; margin-top: 5px;">
+                                <i class="fas fa-exclamation-triangle"></i> Skedari nuk u gjet në server
+                            </small>`;
+                        }
+                    } else {
+                        html += `<small style="color: #666; display: block; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> Nuk ka skedar të bashkëngjitur
+                        </small>`;
+                    }
+                    
+                    html += '</div>';
                 });
                 container.innerHTML = html;
             })
             .catch(err => {
                 container.innerHTML = `<p style="color: red;">Gabim: ${err.message}</p>`;
+            });
+        }
+
+        function downloadSubmission(submissionId) {
+            const token = localStorage.getItem('token');
+            const url = `http://localhost:5000/api/download-submission/${submissionId}`;
+            
+            // First check if the submission exists and has a file
+            fetch(`http://localhost:5000/api/assignments/submission/${submissionId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('DEBUG: Submission data received:', data);
+                
+                if (data.error) {
+                    alert('Gabim: ' + data.error);
+                    return;
+                }
+                
+                if (!data.file_path) {
+                    console.log('DEBUG: No file_path found in submission');
+                    if (data.filename) {
+                        alert('Kjo dorëzim ka një skedar të regjistruar (' + data.filename + ') por skedari nuk u gjet në server. Kjo mund të ndodhë nëse skedari u ngarkua para se të shtohej funksionaliteti i ruajtjes së skedarëve.');
+                    } else {
+                        alert('Kjo dorëzim nuk ka skedar të bashkëngjitur.');
+                    }
+                    return;
+                }
+                
+                // If we get here, the submission exists and has a file
+                // Create a temporary link element to trigger the download
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', '');
+                
+                // Add authorization header by appending token to URL
+                const urlWithToken = `${url}?token=${encodeURIComponent(token)}`;
+                link.href = urlWithToken;
+                
+                // Trigger the download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(error => {
+                console.error('Download error:', error);
+                alert('Gabim në shkarkimin e skedarit: ' + error.message);
             });
         }
 
@@ -330,7 +396,7 @@
             }
 
             const token = localStorage.getItem('token');
-            fetch(`/api/assignments/${assignmentId}`, {
+            fetch(`http://localhost:5000/api/assignments/${assignmentId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -471,7 +537,7 @@
             }
 
             // First load the teacher's assignments
-            fetch('/api/assignments', {
+            fetch('http://localhost:5000/api/assignments', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -489,7 +555,7 @@
                 
                 // For each assignment, get the submissions
                 const assignmentPromises = assignments.map(assignment => {
-                    return fetch(`/api/assignments/${assignment._id}/submissions`, {
+                    return fetch(`http://localhost:5000/api/assignments/${assignment._id}/submissions`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -553,6 +619,7 @@
                 document.getElementById('student-assignments-list').innerHTML = '<p style="color: red;">Gabim në ngarkimin e detyrave të nxënësve.</p>';
             });
         }
+       
         window.onload = function() {
             const token = localStorage.getItem('token');
             if (token) {

@@ -32,6 +32,11 @@
       <button onclick="logout()" style="margin-top: 15px; width: 100%; background: #e74c3c; color: #fff; border: none; border-radius: 5px; padding: 8px 0; cursor: pointer;">Dil</button>
   </div>
 
+  <!-- Back button -->
+  <button onclick="goBackToGames()" style="position: absolute; top: 20px; left: 20px; background: #3498db; color: white; border: none; border-radius: 5px; padding: 10px 15px; cursor: pointer; z-index: 1000; font-size: 14px;">
+      ← Kthehu te Lojërat
+  </button>
+
 <div id="login-container">
   <input type="text" id="username" placeholder="Username" />
   <input type="password" id="password" placeholder="Password" />
@@ -63,7 +68,9 @@
 const wordSets = [
   ["ARIU", "LULE", "BORA", "USHQIM", "BUKË"],
   ["MOLLË", "LIBËR", "DRITË", "SHKOLLË", "KAFSHË"],
-  ["BESË", "GJUHË", "MIK", "QYTET", "KODËR"]
+  ["BESË", "GJUHË", "MIK", "QYTET", "KODËR"],
+  ["FAMILJA", "MËSUSI", "NXËNËSI", "SHOKU", "MOTRA"],
+  ["JANARI", "SHKURTI", "MARSI", "PRILI", "MAJI"]
 ];
 
 let currentWords = [];

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Center</title>
+    <title>Gjeniu i vogël</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
         </svg>
     </div>
     <!-- Modal i profilit -->
-    <div id="profile-modal" style="display:none; position: fixed; top: 70px; right: 30px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 20px; min-width: 220px; z-index: 2000;">
+    <div id="profile-modal" style="display:none; position: fixed; top: 70px; right: 30px; background: rgba(42, 82, 152, 0.9); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 20px; min-width: 220px; z-index: 2000;">
         <div style="display: flex; align-items: center; gap: 10px;">
             <svg width="50" height="50" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
@@ -39,6 +39,28 @@
             <input type="password" id="password" placeholder="Fjalëkalimi">
             <button onclick="login()">Hyni</button>
             <p id="login-message"></p>
+            <p style="margin-top: 10px; font-size: 14px;">
+                <a href="#" onclick="showForgotPassword()" style="color: #3498db; text-decoration: none;">Keni harruar fjalëkalimin?</a>
+            </p>
+        </div>
+        <div class="login-container" id="forgot-password-container" style="display: none;">
+            <h2>Rivendos Fjalëkalimin</h2>
+            <p>Shkruani email-in tuaj dhe do t'ju dërgojmë një link për të rivendosur fjalëkalimin:</p>
+            <input type="text" id="forgot-email" placeholder="Email">
+            <button onclick="sendResetEmail()">Dërgo Link</button>
+            <button onclick="backToLogin()" style="background: #95a5a6; margin-top: 10px;">Kthehu te Login</button>
+            <p id="forgot-message"></p>
+        </div>
+        <div class="login-container" id="reset-password-container" style="display: none;">
+            <h2>Vendos Fjalëkalimin e Ri</h2>
+            <p>Shkruani kodin që keni marrë në email dhe fjalëkalimin e ri:</p>
+            <input type="text" id="reset-email" placeholder="Email" readonly>
+            <input type="text" id="reset-code" placeholder="Kodi i reset">
+            <input type="password" id="new-password" placeholder="Fjalëkalimi i ri">
+            <input type="password" id="confirm-password" placeholder="Konfirmo fjalëkalimin">
+            <button onclick="resetPassword()">Ndrysho Fjalëkalimin</button>
+            <button onclick="backToLogin()" style="background: #95a5a6; margin-top: 10px;">Kthehu te Login</button>
+            <p id="reset-message"></p>
         </div>
         <div class="login-container" id="register-container" style="display: none;">
             <h2>Regjistrohu</h2>
@@ -68,7 +90,6 @@
                 <select id="reg-teacher" class="form-control" required>
                     <option value="">Zgjidh mësuesin</option>
                 </select>
-                <button type="button" onclick="debugTeachers()" style="margin-top: 5px; background: #95a5a6; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-size: 12px;">Testo mësuesit</button>
             </div>
             <div class="form-group" id="teacher-class-select-group" style="display: none;">
                 <label for="reg-teacher-class">Klasa:</label>
@@ -106,8 +127,8 @@
     </div>
 
     <div id="games-menu" style="display: none;">
-        <h2>Zgjidhni lojën</h2>
-        <div class="game-buttons" id="games-container">
+        <h2>Lojërat për Klasën <span id="selected-class-display"></span></h2>
+        <div id="games-container" class="game-buttons">
             <!-- Games will be added here based on class -->
         </div>
         <button onclick="backToClasses()" class="back-button">Kthehu te Klasat</button>
@@ -118,7 +139,12 @@
         <div id="assignments-list" class="assignments-list">
             <!-- Assignments will be loaded here -->
         </div>
-        <button onclick="backToGames()" class="back-button">Kthehu te Lojërat</button>
+        <button onclick="goBackToGames()" class="back-button">Kthehu te Lojërat</button>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loading-container" style="display: none; text-align: center; padding: 50px;">
+        <p>Duke ngarkuar...</p>
     </div>
 
     <script src="assets/js/auth.js"></script>
@@ -137,17 +163,148 @@
         function toggleForms() {
             const loginForm = document.getElementById('login-form');
             const registerForm = document.getElementById('register-container');
+            const forgotForm = document.getElementById('forgot-password-container');
+            const resetForm = document.getElementById('reset-password-container');
             const toggleLink = document.querySelector('#login-container p a');
             
             if (loginForm.style.display !== 'none') {
                 loginForm.style.display = 'none';
                 registerForm.style.display = 'block';
+                forgotForm.style.display = 'none';
+                resetForm.style.display = 'none';
                 toggleLink.textContent = 'Hyni';
             } else {
                 loginForm.style.display = 'block';
                 registerForm.style.display = 'none';
+                forgotForm.style.display = 'none';
+                resetForm.style.display = 'none';
                 toggleLink.textContent = 'Regjistrohu';
             }
+        }
+
+        function showForgotPassword() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-container');
+            const forgotForm = document.getElementById('forgot-password-container');
+            const resetForm = document.getElementById('reset-password-container');
+            
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'none';
+            forgotForm.style.display = 'block';
+            resetForm.style.display = 'none';
+        }
+
+        function backToLogin() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-container');
+            const forgotForm = document.getElementById('forgot-password-container');
+            const resetForm = document.getElementById('reset-password-container');
+            
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            forgotForm.style.display = 'none';
+            resetForm.style.display = 'none';
+        }
+
+        function sendResetEmail() {
+            const email = document.getElementById('forgot-email').value;
+            const message = document.getElementById('forgot-message');
+            
+            if (!email) {
+                message.innerText = 'Ju lutem shkruani email-in tuaj!';
+                message.style.color = 'red';
+                return;
+            }
+            
+            message.innerText = 'Duke dërguar email...';
+            message.style.color = 'blue';
+            
+            fetch('http://localhost:5000/api/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    message.innerText = data.error;
+                    message.style.color = 'red';
+                } else {
+                    message.innerText = 'Email-i u dërgua me sukses! Kontrolloni inbox-in tuaj dhe shkruani kodin më poshtë.';
+                    message.style.color = 'green';
+                    
+                    // Show reset password form
+                    document.getElementById('forgot-password-container').style.display = 'none';
+                    document.getElementById('reset-password-container').style.display = 'block';
+                    document.getElementById('reset-email').value = email;
+                }
+            })
+            .catch(err => {
+                message.innerText = 'Gabim gjatë dërgimit të email-it. Provoni përsëri.';
+                message.style.color = 'red';
+            });
+        }
+
+        function resetPassword() {
+            const email = document.getElementById('reset-email').value;
+            const resetCode = document.getElementById('reset-code').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const message = document.getElementById('reset-message');
+            
+            if (!email || !resetCode || !newPassword || !confirmPassword) {
+                message.innerText = 'Ju lutem plotësoni të gjitha fushat!';
+                message.style.color = 'red';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                message.innerText = 'Fjalëkalimet nuk përputhen!';
+                message.style.color = 'red';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                message.innerText = 'Fjalëkalimi duhet të ketë të paktën 6 karaktere!';
+                message.style.color = 'red';
+                return;
+            }
+            
+            message.innerText = 'Duke ndryshuar fjalëkalimin...';
+            message.style.color = 'blue';
+            
+            fetch('http://localhost:5000/api/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email, 
+                    reset_token: resetCode, 
+                    new_password: newPassword 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    message.innerText = data.error;
+                    message.style.color = 'red';
+                } else {
+                    message.innerText = 'Fjalëkalimi u ndryshua me sukses! Mund të hyni tani.';
+                    message.style.color = 'green';
+                    
+                    // Clear form and go back to login after 2 seconds
+                    setTimeout(() => {
+                        backToLogin();
+                        document.getElementById('reset-code').value = '';
+                        document.getElementById('new-password').value = '';
+                        document.getElementById('confirm-password').value = '';
+                        message.innerText = '';
+                    }, 2000);
+                }
+            })
+            .catch(err => {
+                message.innerText = 'Gabim gjatë ndryshimit të fjalëkalimit. Provoni përsëri.';
+                message.style.color = 'red';
+            });
         }
 
         function initializeForm() {
@@ -171,6 +328,78 @@
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
             const role = localStorage.getItem('role');
+            const forceShowGames = localStorage.getItem('forceShowGames');
+
+            // Add browser back button handler
+            window.addEventListener('popstate', function(event) {
+                console.log('Browser back button pressed');
+                console.log('Event state:', event.state);
+                
+                const token = localStorage.getItem('token');
+                if (token) {
+                    // Check user role again when back button is pressed
+                    fetch('http://localhost:5000/api/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                    .then(response => response.json())
+                    .then(userData => {
+                        console.log('User data on back button:', userData);
+                        if (userData.role === 'student') {
+                            // For students, always show the main page content
+                            document.body.classList.remove('auth-view');
+                            document.body.classList.add('games-view');
+                            
+                            // Check if we're currently in assignments view
+                            const assignmentsContainer = document.getElementById('assignments-container');
+                            if (assignmentsContainer && assignmentsContainer.style.display === 'block') {
+                                console.log('Currently in assignments, going back to games menu');
+                                // If we're in assignments, go back to games menu
+                                assignmentsContainer.style.display = 'none';
+                                document.getElementById('games-menu').style.display = 'block';
+                            } else if (event.state && event.state.page === 'assignments') {
+                                console.log('Coming back from assignments state, showing games menu');
+                                // If we're coming back from assignments state, show games menu
+                                assignmentsContainer.style.display = 'none';
+                                document.getElementById('games-menu').style.display = 'block';
+                            } else {
+                                // Otherwise, load games normally
+                                loadGames();
+                            }
+                        } else if (userData.role === 'teacher') {
+                            // For teachers, redirect to teacher panel
+                            window.location.href = 'teachers.html';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error on back button:', error);
+                    });
+                }
+            });
+
+            // Add beforeunload handler to clear flags when navigating away
+            window.addEventListener('beforeunload', function(event) {
+                console.log('Page unloading, clearing forceShowGames flag');
+                localStorage.removeItem('forceShowGames');
+            });
+
+            // Add handler to prevent navigation outside the app
+            window.addEventListener('beforeunload', function(event) {
+                // Only prevent navigation if we're logged in and trying to go to external sites
+                const token = localStorage.getItem('token');
+                if (token) {
+                    // Allow navigation to our own pages
+                    if (window.location.href.includes('localhost') || 
+                        window.location.href.includes('127.0.0.1') ||
+                        window.location.href.startsWith('file://')) {
+                        return;
+                    }
+                    
+                    // Prevent navigation to external sites
+                    event.preventDefault();
+                    event.returnValue = '';
+                    return '';
+                }
+            });
 
             if (token) {
                 const loginContainer = document.getElementById('login-container');
@@ -178,14 +407,45 @@
                     loginContainer.style.display = 'none';
                 }
                 
-                if (role === 'teacher') {
-                    window.location.href = 'teachers.html';
-                } else if (role === 'student') {
-                    document.body.classList.remove('auth-view');
-                    document.body.classList.add('games-view');
-                    document.getElementById('games-menu').style.display = 'block';
+                // First, let's check the actual user role from the backend to be sure
+                fetch('http://localhost:5000/api/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(response => response.json())
+                .then(userData => {
+                    console.log('User data on page load:', userData);
+                    
+                    if (userData.role === 'teacher') {
+                        console.log('User is teacher, redirecting to teacher panel');
+                        window.location.href = 'teachers.html';
+                    } else if (userData.role === 'student') {
+                        console.log('User is student, showing appropriate content');
+                        document.body.classList.remove('auth-view');
+                        document.body.classList.add('games-view');
+                        
+                        // If forceShowGames flag is present, show games directly
+                        if (forceShowGames === 'true') {
+                            console.log('Force showing games - clearing flag');
+                            // Clear the flag immediately
+                            localStorage.removeItem('forceShowGames');
+                            // Show games directly
+                            showGamesDirectly();
+                        } else {
+                            console.log('Normal flow - showing class selection');
+                            // Normal flow - let loadGames() decide what to show
+                            loadGames();
+                        }
+                    } else {
+                        console.error('Unknown user role:', userData.role);
+                        // Fallback to normal flow
+                        loadGames();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data on page load:', error);
+                    // Fallback to normal flow
                     loadGames();
-                }
+                });
             }
         
             // Listen for student login completion event
@@ -241,7 +501,7 @@
                 }
             });
 
-            renderClassButtons();
+            // Don't render class buttons automatically - let loadGames() handle it
         });
 
         async function loadGames() {
@@ -257,6 +517,12 @@
                 loginContainer.style.display = 'none';
             }
 
+            // Show loading indicator
+            const loadingContainer = document.getElementById('loading-container');
+            if (loadingContainer) {
+                loadingContainer.style.display = 'block';
+            }
+
             try {
                 const response = await fetch('http://localhost:5000/api/me', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -268,27 +534,72 @@
                 }
 
                 const userData = await response.json();
-                console.log('User data:', userData);
+                
+                // Hide loading indicator
+                if (loadingContainer) {
+                    loadingContainer.style.display = 'none';
+                }
                 
                 if (userData.role === 'student' && userData.class_level) {
-                    document.getElementById('menu').style.display = 'none';
-                    selectClass(userData.class_level);
-                    document.getElementById('games-menu').style.display = 'block'; 
-                } else if (userData.role === 'student') {
-                    // Student without class_level - show class selection
+                    // Always show class selection first for students, even if they have an assigned class
+                    // This allows the back button to work properly
                     document.getElementById('menu').style.display = 'block';
                     document.getElementById('games-menu').style.display = 'none';
+                    
+                    // Store the class level in localStorage for the back button
+                    const classLevel = parseInt(userData.class_level);
+                    localStorage.setItem('userClassLevel', classLevel);
+                    console.log('Stored user class level:', classLevel);
+                    
+                    // Clear existing class buttons
+                    const container = document.getElementById('class-buttons-container');
+                    container.innerHTML = '';
+                    
+                    // Find the class data for this level
+                    const studentClass = classData.find(cls => cls.grade === classLevel);
+                    if (studentClass) {
+                        // Create only the student's assigned class button
+                        const card = document.createElement('div');
+                        card.className = 'class-card';
+                        card.onclick = () => selectClass(studentClass.grade);
+
+                        const img = document.createElement('img');
+                        img.src = studentClass.image;
+                        img.alt = studentClass.label;
+                        img.className = 'class-image';
+
+                        const label = document.createElement('div');
+                        label.className = 'class-label';
+                        label.textContent = studentClass.label;
+
+                        card.appendChild(img);
+                        card.appendChild(label);
+                        container.appendChild(card);
+                    } else {
+                        console.error('Class data not found for level:', classLevel);
+                    }
+                } else if (userData.role === 'student') {
+                    // Student without class_level - show all class selection
+                    document.getElementById('menu').style.display = 'block';
+                    document.getElementById('games-menu').style.display = 'none';
+                    renderClassButtons();
                 } else {
                     // Not a student
                     console.error('User is not a student:', userData.role);
                     document.getElementById('menu').style.display = 'block';
                     document.getElementById('games-menu').style.display = 'none';
+                    renderClassButtons();
                 }
             } catch (error) {
                 console.error(`DEBUG: LoadGames -> Error: ${error.message}`);
+                // Hide loading indicator
+                if (loadingContainer) {
+                    loadingContainer.style.display = 'none';
+                }
                 // Fallback to class selection on error
                 document.getElementById('menu').style.display = 'block';
                 document.getElementById('games-menu').style.display = 'none';
+                renderClassButtons();
             }
         }
 
@@ -446,10 +757,14 @@
                 ]
             };
 
-            gamesByClass[grade].forEach(game => {
-                addGameButton(game.file, game.title, game.image);
-            });
-            addAssignmentsButton();
+            if (gamesByClass[grade]) {
+                gamesByClass[grade].forEach(game => {
+                    addGameButton(game.file, game.title, game.image);
+                });
+                addAssignmentsButton();
+            } else {
+                console.error('No games found for grade:', grade);
+            }
         }
 
         function addGameButton(game, title, image) {
@@ -480,10 +795,14 @@
         function showAssignments() {
             document.getElementById('games-menu').style.display = 'none';
             document.getElementById('assignments-container').style.display = 'block';
+            
+            // Add a history entry for assignments
+            window.history.pushState({ page: 'assignments' }, 'Assignments', '#assignments');
+            
             loadStudentAssignments();
         }
 
-        function backToGames() {
+        function goBackToGames() {
             document.getElementById('assignments-container').style.display = 'none';
             document.getElementById('games-menu').style.display = 'block';
         }
@@ -621,7 +940,7 @@
             assignmentsList.innerHTML = '<p>Duke ngarkuar detyrat...</p>';
 
             try {
-                const response = await fetch('http://localhost:5000/api/assignments', {
+                const response = await fetch('http://localhost:5000/api/my-assignments', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -661,7 +980,7 @@
                                     ? '<p style="color: #e74c3c; font-weight: bold;">Afati për këtë detyrë ka përfunduar.</p>'
                                     : `
                                         <form id="form-${assignment._id}" onsubmit="submitAssignment(event, '${assignment._id}')">
-                                            <textarea name="text" placeholder="Shkruaj përgjigjen tënde..."></textarea>
+                                            <textarea name="message" placeholder="Shkruaj përgjigjen tënde..."></textarea>
                                             <input type="file" name="file">
                                             <button type="submit">Dorëzo</button>
                                         </form>
@@ -691,29 +1010,8 @@
             const historyContainer = document.getElementById(`history-${assignmentId}`);
 
             try {
-                const response = await fetch(`/api/assignments/${assignmentId}/mysubmissions`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const attempts = await response.json();
-
-                if (attempts.error) throw new Error(attempts.error);
-
-                if (attempts.length > 0) {
-                    let historyHtml = '';
-                    attempts.reverse().forEach(attempt => {
-                        const date = new Date(attempt.submitted_at).toLocaleString('sq-AL');
-                        historyHtml += `
-                            <div class="submission-item">
-                                <strong>Dorëzuar më: ${date}</strong>
-                                ${attempt.text ? `<p class="submission-text">${attempt.text}</p>` : ''}
-                                ${attempt.file_path ? `<p><a href="/${attempt.file_path.replace(/\\/g, '/')}" target="_blank" class="file-link">Shiko skedarin e bashkëngjitur</a></p>` : ''}
-                            </div>
-                        `;
-                    });
-                    historyContainer.innerHTML = historyHtml;
-                } else {
-                    historyContainer.innerHTML = '<p>Nuk ka dorëzime të mëparshme.</p>';
-                }
+                // For now, we'll show a simple message since the backend doesn't have a specific endpoint for student submissions
+                historyContainer.innerHTML = '<p>Funksionaliteti për shikimin e dorëzimeve do të shtohet së shpejti.</p>';
             } catch (error) {
                 historyContainer.innerHTML = `<p style="color:red;">Gabim në ngarkimin e historikut: ${error.message}</p>`;
             }
@@ -726,12 +1024,13 @@
             const statusP = document.getElementById(`submission-status-${assignmentId}`);
             
             const formData = new FormData(form);
+            formData.append('assignment_id', assignmentId);
             
             statusP.textContent = 'Duke dorëzuar...';
             statusP.style.color = 'blue';
 
             try {
-                const response = await fetch(`/api/assignments/${assignmentId}/submit`, {
+                const response = await fetch(`http://localhost:5000/api/submit-assignment`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
@@ -745,9 +1044,6 @@
 
                 statusP.textContent = 'Detyra u dorëzua me sukses!';
                 statusP.style.color = 'green';
-                
-                // Refresh submission history
-                loadMySubmissions(assignmentId);
                 
                 // Clear form
                 form.reset();
@@ -775,6 +1071,114 @@
                     alert('Gabim gjatë kontrollit të mësuesve: ' + err.message);
                 });
         }
+
+        function showGamesDirectly() {
+            console.log('showGamesDirectly called - simple approach');
+            
+            // Get user data from localStorage or make a simple request
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+
+            // First, let's check the user's role to make sure we're showing the right thing
+            fetch('http://localhost:5000/api/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(response => response.json())
+            .then(userData => {
+                console.log('User data in showGamesDirectly:', userData);
+                
+                if (userData.role === 'teacher') {
+                    console.log('User is teacher, redirecting to teacher panel');
+                    window.location.href = 'teachers.html';
+                    return;
+                }
+                
+                if (userData.role === 'student') {
+                    console.log('User is student, showing games directly');
+                    
+                    // Hide class selection, show games menu immediately
+                    document.getElementById('menu').style.display = 'none';
+                    document.getElementById('games-menu').style.display = 'block';
+                    
+                    // Get the user's class level from localStorage or from user data
+                    const classLevel = localStorage.getItem('userClassLevel') || userData.class_level || 1;
+                    
+                    console.log('Showing games for class level:', classLevel);
+                    
+                    // Update the class display
+                    document.getElementById('selected-class-display').textContent = classLevel;
+                    
+                    // Load games for this class
+                    const gamesContainer = document.getElementById('games-container');
+                    gamesContainer.innerHTML = '';
+
+                    // Define games for each class
+                    const gamesByClass = {
+                        1: [
+                            { file: 'mathquiz1', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                            { file: 'wordsearch', title: 'Word Search', image: 'assets/images/word.png' },
+                            { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                        ],
+                        2: [
+                            { file: 'mathquiz2', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                            { file: 'wordsearch', title: 'Word Search', image: 'assets/images/word.png' },
+                            { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                        ],
+                        3: [
+                            { file: 'mathquiz3', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                            { file: 'crossword', title: 'Crossword', image: 'assets/images/crossword.jpg' },
+                            { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                        ],
+                        4: [
+                            { file: 'mathquiz4', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                            { file: 'crossword', title: 'Crossword', image: 'assets/images/crossword.jpg' },
+                            { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                        ],
+                        5: [
+                            { file: 'mathquiz5', title: 'Math Quiz', image: 'assets/images/math.jpg' },
+                            { file: 'peremri', title: 'Përemri', image: 'assets/images/peremri.jpg' },
+                            { file: 'memorygame', title: 'Memory Game', image: 'assets/images/memory.jpg' }
+                        ]
+                    };
+
+                    const games = gamesByClass[classLevel] || gamesByClass[1]; // Default to class 1 if not found
+                    console.log('Loading games:', games);
+                    
+                    games.forEach(game => {
+                        const card = document.createElement('div');
+                        card.className = 'game-card';
+                        card.onclick = () => startGame(game.file);
+
+                        const img = document.createElement('img');
+                        img.src = game.image;
+                        img.alt = game.title;
+                        img.className = 'game-image';
+
+                        const label = document.createElement('div');
+                        label.className = 'game-label';
+                        label.textContent = game.title;
+
+                        card.appendChild(img);
+                        card.appendChild(label);
+                        gamesContainer.appendChild(card);
+                    });
+
+                    // Add assignments button for students
+                    addAssignmentsButton();
+                    console.log('Games loaded successfully - simple approach');
+                } else {
+                    console.error('Unknown user role:', userData.role);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data in showGamesDirectly:', error);
+                // Fallback to normal loadGames
+                loadGames();
+            });
+        }
     </script>
 </body>
-</html> 
+</html>

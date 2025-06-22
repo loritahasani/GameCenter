@@ -1,5 +1,3 @@
-
->
         const gamesData = {
             1: [
                 { name: "Word Search" , image:"word.png"},

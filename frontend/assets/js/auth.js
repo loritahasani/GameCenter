@@ -48,64 +48,53 @@ fetch("http://localhost:5000/api/test")
         loginMessage.innerText = "Cannot connect to server. Please make sure the server is running.";
     });
 
-function login() {
-    const email = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+// API Configuration
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:5000/api' 
+    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
+
+// Update all fetch calls to use API_BASE_URL
+async function login() {
+    const email = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const message = document.getElementById('login-message');
 
     if (!email || !password) {
-        loginMessage.innerText = "Ju lutem plotësoni të gjitha fushat!";
+        message.innerText = 'Ju lutem plotësoni të gjitha fushat!';
+        message.style.color = 'red';
         return;
     }
 
-    loginMessage.innerText = "Duke u loguar...";
+    try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
 
-    fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ email, password })
-    })
-    .then(res => {
-        if (!res.ok) {
-            return res.json().then(data => {
-                throw new Error(data.error || 'Login failed');
-            });
-        }
-        return res.json();
-    })
-    .then(data => {
-        if (data.token) {
-            token = data.token;
-            localStorage.setItem("token", token);
-            localStorage.setItem("role", data.role);
-            loginContainer.style.display = "none";
+        const data = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('role', data.role);
+            localStorage.setItem('name', data.name);
             
-            if (data.role === "teacher") {
-                window.location.href = "teachers.html";
+            if (data.role === 'teacher') {
+                window.location.href = 'teachers.html';
             } else {
-                // For students, check if we're on index.html
-                if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
-                    // Change body classes for proper styling
-                    document.body.classList.remove('auth-view');
-                    document.body.classList.add('games-view');
-                    
-                    // Trigger a custom event to notify index.html that login is complete
-                    const loginEvent = new CustomEvent('studentLoginComplete', {
-                        detail: { token: data.token, role: data.role }
-                    });
-                    document.dispatchEvent(loginEvent);
-                } else {
-                    // If not on index.html, redirect to it
-                    window.location.href = "index.html";
-                }
+                document.body.classList.remove('auth-view');
+                document.body.classList.add('games-view');
+                loadUserProfile();
+                loadGames();
             }
-        } else if (data.error) {
-            loginMessage.innerText = data.error;
+        } else {
+            message.innerText = data.error || 'Gabim gjatë login-it!';
+            message.style.color = 'red';
         }
-    })
-    .catch(error => {
-        console.error('Login error:', error);
-        loginMessage.innerText = error.message || "Gabim gjatë login-it! Kontrollo email-in dhe fjalëkalimin.";
-    });
+    } catch (error) {
+        message.innerText = 'Gabim në lidhje me serverin!';
+        message.style.color = 'red';
+    }
 }
 
 function loadUserScores() {
@@ -276,7 +265,34 @@ window.addEventListener('DOMContentLoaded', function() {
 function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("role"); // Also clear the role
-    window.location.href = "/index.html";
+    
+    // Check if we're in a game file (in games/ directory) or in the main directory
+    if (window.location.pathname.includes('/games/')) {
+        // If we're in a game file, go up one directory to reach index.html
+        window.location.href = "../index.html";
+    } else {
+        // If we're in the main directory, go directly to index.html
+        window.location.href = "index.html";
+    }
+}
+
+// Go back to games list function
+function goBackToGames() {
+    console.log('goBackToGames called');
+    
+    // Set a simple flag in localStorage
+    localStorage.setItem('forceShowGames', 'true');
+    
+    // Check if we're in a game file (in games/ directory)
+    if (window.location.pathname.includes('/games/')) {
+        console.log('In game file, redirecting to index.html');
+        // If we're in a game file, go back to index.html with timestamp to prevent caching
+        window.location.replace("../index.html?t=" + Date.now());
+    } else {
+        console.log('In main directory, reloading');
+        // If we're in the main directory, just reload to show games
+        window.location.reload(true); // Force reload from server
+    }
 }
 
 function register() {
