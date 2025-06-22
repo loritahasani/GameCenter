@@ -1,3 +1,6 @@
+// API Configuration
+const API_BASE_URL = 'https://gjeniu-i-vogel-backend.onrender.com/api';
+
 // Authentication functions
 let token = localStorage.getItem("token");
 const loginContainer = document.getElementById("login-container");
@@ -35,7 +38,7 @@ if (token) {
 }
 
 // Test server connection
-fetch("http://localhost:5000/api/test")
+fetch(`${API_BASE_URL}/test`)
     .then(res => res.json())
     .then(data => {
         if (data.error) {
@@ -48,12 +51,6 @@ fetch("http://localhost:5000/api/test")
         loginMessage.innerText = "Cannot connect to server. Please make sure the server is running.";
     });
 
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:5000/api' 
-    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
-
-// Update all fetch calls to use API_BASE_URL
 async function login() {
     const email = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -100,7 +97,7 @@ async function login() {
 function loadUserScores() {
     if (!token) return;
 
-    fetch("http://localhost:5000/api/get-scores", {
+    fetch(`${API_BASE_URL}/get-scores`, {
         headers: {
             "Authorization": `Bearer ${token}`
         }
@@ -122,14 +119,12 @@ function loadUserScores() {
                     let displayScore = 0;
                     
                     if (Array.isArray(gameScores)) {
-                        // If it's an array of attempts, sum all scores
                         for (const attempt of gameScores) {
                             if (attempt.score) {
                                 displayScore += attempt.score;
                             }
                         }
                     } else if (typeof gameScores === 'number') {
-                        // If it's a single number (old format)
                         displayScore = gameScores;
                     }
                     
@@ -155,7 +150,7 @@ function sendScoreToBackend(game, points) {
         return;
     }
 
-    fetch("http://localhost:5000/api/save-score", {
+    fetch(`${API_BASE_URL}/save-score`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -189,7 +184,6 @@ function sendScoreToBackend(game, points) {
     });
 }
 
-// PROFILI: Shfaq/Fsheh ikonën dhe modalin e profilit
 function showProfileIconIfLoggedIn() {
     const token = localStorage.getItem('token');
     const icon = document.getElementById('profile-icon');
@@ -206,33 +200,29 @@ function fillProfileModal(user, scores) {
     document.getElementById('profile-score').innerText = scores?.total || 0;
 }
 
-// Merr të dhënat e përdoruesit nga backend-i
 function fetchUserProfileAndScores() {
     const token = localStorage.getItem('token');
     if (!token) return;
-    fetch('http://localhost:5000/api/me', {
+    fetch(`${API_BASE_URL}/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())
     .then(user => {
-        fetch('http://localhost:5000/api/get-scores', {
+        fetch(`${API_BASE_URL}/get-scores`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(res => res.json())
         .then(data => {
             let total = 0;
             if (data.scores) {
-                // Handle new score structure where scores are arrays of attempts
                 for (const gameScores of Object.values(data.scores)) {
                     if (Array.isArray(gameScores)) {
-                        // If it's an array of attempts, sum all scores
                         for (const attempt of gameScores) {
                             if (attempt.score) {
                                 total += attempt.score;
                             }
                         }
                     } else if (typeof gameScores === 'number') {
-                        // If it's a single number (old format)
                         total += gameScores;
                     }
                 }
@@ -242,7 +232,6 @@ function fetchUserProfileAndScores() {
     });
 }
 
-// Event listeners për profilin
 window.addEventListener('DOMContentLoaded', function() {
     showProfileIconIfLoggedIn();
     const icon = document.getElementById('profile-icon');
@@ -261,37 +250,25 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Logout function
 function logout() {
     localStorage.removeItem("token");
-    localStorage.removeItem("role"); // Also clear the role
-    
-    // Check if we're in a game file (in games/ directory) or in the main directory
+    localStorage.removeItem("role");
     if (window.location.pathname.includes('/games/')) {
-        // If we're in a game file, go up one directory to reach index.html
         window.location.href = "../index.html";
     } else {
-        // If we're in the main directory, go directly to index.html
         window.location.href = "index.html";
     }
 }
 
-// Go back to games list function
 function goBackToGames() {
     console.log('goBackToGames called');
-    
-    // Set a simple flag in localStorage
     localStorage.setItem('forceShowGames', 'true');
-    
-    // Check if we're in a game file (in games/ directory)
     if (window.location.pathname.includes('/games/')) {
         console.log('In game file, redirecting to index.html');
-        // If we're in a game file, go back to index.html with timestamp to prevent caching
         window.location.replace("../index.html?t=" + Date.now());
     } else {
         console.log('In main directory, reloading');
-        // If we're in the main directory, just reload to show games
-        window.location.reload(true); // Force reload from server
+        window.location.reload(true);
     }
 }
 
@@ -328,7 +305,7 @@ function register() {
 
     registerMessage.innerText = "Duke u regjistruar...";
 
-    fetch("http://localhost:5000/api/register", {
+    fetch(`${API_BASE_URL}/register`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(registrationData)
@@ -339,7 +316,7 @@ function register() {
             registerMessage.innerText = data.error;
         } else {
             alert(data.message);
-            toggleForms(); // Switch back to login form
+            toggleForms();
         }
     })
     .catch(err => {
@@ -362,4 +339,4 @@ function toggleForms() {
 
 function populateClassButtons() {
     // Implementation of populateClassButtons function
-} 
+}
