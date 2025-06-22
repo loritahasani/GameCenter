@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <title>Word Search Game</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <!-- Profili i nxënësit -->
+  <div id="profile-icon" style="display:none; position: absolute; top: 20px; right: 30px; cursor: pointer; z-index: 1000;">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+          <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+          <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+      </svg>
+  </div>
+  <!-- Modal i profilit -->
+  <div id="profile-modal" style="display:none; position: fixed; top: 70px; right: 30px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 20px; min-width: 220px; z-index: 2000;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+          <svg width="50" height="50" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+              <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+              <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+          </svg>
+          <div>
+              <div id="profile-username" style="font-weight: bold;">Emri</div>
+              <div id="profile-email" style="font-size: 0.9em; color: #888;">Email</div>
+          </div>
+      </div>
+      <hr style="margin: 15px 0;">
+      <div>Pikët: <span id="profile-score">0</span></div>
+      <button onclick="logout()" style="margin-top: 15px; width: 100%; background: #e74c3c; color: #fff; border: none; border-radius: 5px; padding: 8px 0; cursor: pointer;">Dil</button>
+  </div>
+
+  <!-- Back button -->
+  <button onclick="goBackToGames()" style="position: absolute; top: 20px; left: 20px; background: #3498db; color: white; border: none; border-radius: 5px; padding: 10px 15px; cursor: pointer; z-index: 1000; font-size: 14px;">
+      ← Kthehu te Lojërat
+  </button>
+
+<div id="login-container">
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <p id="login-message" style="color:red;"></p>
+</div>
+
+<div id="menu" style="display:none;">
+  <div class="math-quiz-menu">
+    <span class="game-icon">🔍</span>
+    <h1>Word Search Game</h1>
+    <br>
+    <button class="start-btn" onclick="startGame()">Start</button>
+  </div>
+</div>
+
+<div id="game" style="display:none;">
+  <span id="confetti" class="confetti" style="display:none;"></span>
+  <h2>Gjej fjalët:</h2>
+  <div id="word-list" class="word-list"></div>
+  <div id="grid" class="word-search-grid"></div>
+  <div id="feedback" class="memory-game-message"></div>
+  <button id="restart-button" class="memory-reset-button" onclick="startGame()">Rifillo</button>
+  <button id="finish-button" class="play-button" onclick="finishGame()">Përfunduat të gjitha</button>
+</div>
+
+<script src="../assets/js/auth.js"></script>
+<script>
+const wordSets = [
+  ["ARIU", "LULE", "BORA", "USHQIM", "BUKË"],
+  ["MOLLË", "LIBËR", "DRITË", "SHKOLLË", "KAFSHË"],
+  ["BESË", "GJUHË", "MIK", "QYTET", "KODËR"],
+  ["FAMILJA", "MËSUSI", "NXËNËSI", "SHOKU", "MOTRA"],
+  ["JANARI", "SHKURTI", "MARSI", "PRILI", "MAJI"]
+];
+
+let currentWords = [];
+let foundWords = [];
+let selectedCells = [];
+let mouseDown = false;
+let currentSetIndex = 0;
+let score = 0;
+
+function startGame() {
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('finish-button').style.display = 'none';
+  document.getElementById('restart-button').style.display = 'none';
+  foundWords = [];
+  selectedCells = [];
+  score = 0;
+  generateGrid();
+}
+
+function generateGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÇË";
+  const size = 10;
+  let gridData = Array.from({ length: size }, () => Array(size).fill(''));
+
+  // Merr një set të ri fjalësh
+  currentWords = wordSets[currentSetIndex];
+  currentSetIndex = (currentSetIndex + 1) % wordSets.length;
+
+  // Vendos fjalët në mënyrë rastësore
+  currentWords.forEach(word => placeWord(gridData, word.toUpperCase()));
+
+  // Plotëso boshllëqet me shkronja të rastësishme
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (gridData[r][c] === '') {
+        gridData[r][c] = letters[Math.floor(Math.random() * letters.length)];
+      }
+    }
+  }
+
+  // Krijo vizualisht grid-in
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'word-search-cell';
+      cell.textContent = gridData[r][c];
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      cell.addEventListener('mousedown', handleMouseDown);
+      cell.addEventListener('mouseenter', handleMouseEnter);
+      cell.addEventListener('mouseup', handleMouseUp);
+      grid.appendChild(cell);
+    }
+  }
+
+  // Shfaq listën e fjalëve
+  document.getElementById('word-list').textContent = currentWords.join(", ");
+}
+
+function placeWord(grid, word) {
+  const directions = [
+    [0, 1], [1, 0]  // Horizontal dhe Vertikal
+  ];
+  let placed = false;
+  const size = grid.length;
+
+  while (!placed) {
+    const dir = directions[Math.floor(Math.random() * directions.length)];
+    const startRow = Math.floor(Math.random() * size);
+    const startCol = Math.floor(Math.random() * size);
+
+    let r = startRow, c = startCol;
+    let canPlace = true;
+
+    for (let i = 0; i < word.length; i++) {
+      if (r < 0 || r >= size || c < 0 || c >= size || (grid[r][c] && grid[r][c] !== word[i])) {
+        canPlace = false;
+        break;
+      }
+      r += dir[0];
+      c += dir[1];
+    }
+
+    if (canPlace) {
+      r = startRow;
+      c = startCol;
+      for (let i = 0; i < word.length; i++) {
+        grid[r][c] = word[i];
+        r += dir[0];
+        c += dir[1];
+      }
+      placed = true;
+    }
+  }
+}
+
+function handleMouseDown(e) {
+  mouseDown = true;
+  selectedCells = [e.target];
+  e.target.classList.add('selected');
+}
+
+function handleMouseEnter(e) {
+  if (mouseDown) {
+    selectedCells.push(e.target);
+    e.target.classList.add('selected');
+  }
+}
+
+function handleMouseUp() {
+  mouseDown = false;
+  const word = selectedCells.map(c => c.textContent).join('');
+
+  const reversedWord = [...word].reverse().join('');
+  if (currentWords.includes(word) && !foundWords.includes(word)) {
+    markAsFound();
+    foundWords.push(word);
+    score += 6;
+    document.getElementById('feedback').textContent = `Saktë! Gjetët: ${word}`;
+  } else if (currentWords.includes(reversedWord) && !foundWords.includes(reversedWord)) {
+    markAsFound();
+    foundWords.push(reversedWord);
+    score += 6;
+    document.getElementById('feedback').textContent = `Saktë! Gjetët: ${reversedWord}`;
+  } else {
+    document.getElementById('feedback').textContent = 'Gabim. Provo përsëri!';
+    selectedCells.forEach(c => c.classList.remove('selected'));
+  }
+
+  selectedCells = [];
+
+  // Kontrollo nëse janë gjetur të gjitha fjalët
+  if (foundWords.length === currentWords.length) {
+    document.getElementById('feedback').textContent = 'Urime! I gjete të gjitha fjalët!';
+    document.getElementById('finish-button').style.display = 'inline-block';
+    showConfetti();
+  }
+}
+
+function markAsFound() {
+  selectedCells.forEach(c => {
+    c.classList.remove('selected');
+    c.classList.add('found');
+  });
+}
+
+function finishGame() {
+  sendScoreToBackend("wordsearch", score);
+  document.getElementById('restart-button').style.display = 'inline-block';
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('menu').style.display = 'block';
+  loadUserScores();
+}
+
+function loadUserScores() {
+    if (!token) return;
+    fetch("http://localhost:5000/api/get-scores", {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Failed to load scores');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.scores) {
+            const scoresDiv = document.getElementById("my-scores");
+            if (scoresDiv) {
+                scoresDiv.innerHTML = "";
+                if (data.scores.wordsearch !== undefined) {
+                    const scoreElement = document.createElement("p");
+                    scoreElement.textContent = `Pikët e Mia: ${data.scores.wordsearch}`;
+                    scoresDiv.appendChild(scoreElement);
+                } else {
+                    scoresDiv.textContent = "Nuk ka pikë për këtë lojë.";
+                }
+            }
+        }
+    })
+    .catch(err => {
+        console.error("Error loading scores:", err);
+        if (err.message === 'Failed to load scores') {
+            localStorage.removeItem("token");
+            window.location.reload();
+        }
+    });
+}
+
+function showConfetti() {
+  const confetti = document.getElementById('confetti');
+  if (confetti) {
+    confetti.style.display = 'block';
+    confetti.innerHTML = '🎉🎊✨';
+    setTimeout(() => { confetti.style.display = 'none'; confetti.innerHTML = ''; }, 1800);
+  }
+}
+</script>
+
+</body>
+</html>

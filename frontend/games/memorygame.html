@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <title>Memory Game</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+    <!-- Profili i nxënësit -->
+    <div id="profile-icon" style="display:none; position: absolute; top: 20px; right: 30px; cursor: pointer; z-index: 1000;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+            <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+            <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+        </svg>
+    </div>
+    <!-- Modal i profilit -->
+    <div id="profile-modal" style="display:none; position: fixed; top: 70px; right: 30px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); padding: 20px; min-width: 220px; z-index: 2000;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="50" height="50" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="20" fill="#e3e3e3"/>
+                <circle cx="20" cy="15" r="7" fill="#bdbdbd"/>
+                <ellipse cx="20" cy="30" rx="12" ry="7" fill="#bdbdbd"/>
+            </svg>
+            <div>
+                <div id="profile-username" style="font-weight: bold;">Emri</div>
+                <div id="profile-email" style="font-size: 0.9em; color: #888;">Email</div>
+            </div>
+        </div>
+        <hr style="margin: 15px 0;">
+        <div>Pikët: <span id="profile-score">0</span></div>
+        <button onclick="logout()" style="margin-top: 15px; width: 100%; background: #e74c3c; color: #fff; border: none; border-radius: 5px; padding: 8px 0; cursor: pointer;">Dil</button>
+    </div>
+
+    <!-- Back button -->
+    <button onclick="goBackToGames()" style="position: absolute; top: 20px; left: 20px; background: #3498db; color: white; border: none; border-radius: 5px; padding: 10px 15px; cursor: pointer; z-index: 1000; font-size: 14px;">
+        ← Kthehu te Lojërat
+    </button>
+
+<div id="login-container">
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <p id="login-message" style="color:red;"></p>
+</div>
+
+<div id="menu" style="display:none;">
+  <div class="math-quiz-menu">
+    <span class="game-icon">🧠</span>
+    <h1>Memory Game</h1>
+    <br>
+    <button class="start-btn" onclick="startGame()">Start</button>
+  </div>
+</div>
+
+<div id="game" style="display:none;">
+    <span id="confetti" class="confetti" style="display:none;"></span>
+    <h2>Memory Game</h2>
+    <p class="progress-text">Gjej çiftet që përputhen!</p>
+    <div id="memory-game-board" class="memory-game-board"></div>
+    <button onclick="resetGame()" class="memory-reset-button">Rinis</button>
+    <p id="game-message" class="memory-game-message"></p>
+</div>
+
+<script src="../assets/js/auth.js"></script>
+<script>
+    const emojis = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍒', '🍍', '🍊', '🍏', '🍑'];
+
+    let cards = [];
+    let flipped = [];
+    let matched = [];
+    let score = 0;
+    let moves = 0;
+
+    function startGame() {
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+        document.getElementById('game-message').textContent = '';
+        score = 0;
+        moves = 0;
+        resetGame();
+    }
+
+    function generateUniqueCards() {
+        let cardEmojis = [];
+        emojis.forEach(emoji => {
+            cardEmojis.push(emoji, emoji);
+        });
+        shuffle(cardEmojis);
+        return cardEmojis;
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function createCard(value) {
+        const btn = document.createElement("button");
+        btn.textContent = "❓";
+        btn.className = "memory-card";
+        btn.disabled = false;
+
+        btn.addEventListener("click", () => {
+            if (flipped.length < 2 && !flipped.includes(btn)) {
+                btn.textContent = value;
+                flipped.push(btn);
+                moves++;
+
+                if (flipped.length === 2) {
+                    setTimeout(checkMatch, 500);
+                }
+            }
+        });
+
+        board.appendChild(btn);
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flipped;
+        if (card1.textContent === card2.textContent) {
+            matched.push(card1, card2);
+            card1.disabled = true;
+            card2.disabled = true;
+            score += 10;
+        } else {
+            setTimeout(() => {
+                card1.textContent = "❓";
+                card2.textContent = "❓";
+            }, 500);
+        }
+        flipped = [];
+
+        if (matched.length === cards.length) {
+            const finalScore = Math.max(0, score - moves);
+            document.getElementById("game-message").textContent = `Urime! I gjete të gjitha çiftet! Pikët: ${finalScore}`;
+            sendScoreToBackend("memorygame", finalScore);
+            showConfetti();
+            setTimeout(() => {
+                document.getElementById('game').style.display = 'none';
+                document.getElementById('menu').style.display = 'block';
+                loadUserScores();
+            }, 2000);
+        }
+    }
+
+    function resetGame() {
+        document.getElementById("game-message").textContent = "";
+        board.innerHTML = "";
+        flipped = [];
+        matched = [];
+        cards = generateUniqueCards();
+        shuffle(cards);
+        cards.forEach(createCard);
+    }
+
+    function loadUserScores() {
+        if (!token) return;
+        fetch("http://localhost:5000/api/get-scores", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('Failed to load scores');
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.scores) {
+                const scoresDiv = document.getElementById("my-scores");
+                if (scoresDiv) {
+                    scoresDiv.innerHTML = "";
+                    if (data.scores.memorygame) {
+                        let displayScore = 0;
+                        if (Array.isArray(data.scores.memorygame)) {
+                            // If it's an array of attempts, sum all scores
+                            for (const attempt of data.scores.memorygame) {
+                                if (attempt.score) {
+                                    displayScore += attempt.score;
+                                }
+                            }
+                        } else if (typeof data.scores.memorygame === 'number') {
+                            // If it's a single number (old format)
+                            displayScore = data.scores.memorygame;
+                        }
+                        const scoreElement = document.createElement("p");
+                        scoreElement.textContent = `Pikët e Mia: ${displayScore}`;
+                        scoresDiv.appendChild(scoreElement);
+                    } else {
+                        scoresDiv.textContent = "Nuk ka pikë për këtë lojë.";
+                    }
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Error loading scores:", err);
+            if (err.message === 'Failed to load scores') {
+                localStorage.removeItem("token");
+                window.location.reload();
+            }
+        });
+    }
+
+    function showConfetti() {
+        const confetti = document.getElementById('confetti');
+        if (confetti) {
+            confetti.style.display = 'block';
+            confetti.innerHTML = '🎉🎊✨';
+            setTimeout(() => { confetti.style.display = 'none'; confetti.innerHTML = ''; }, 1800);
+        }
+    }
+
+    const board = document.getElementById("memory-game-board");
+</script>
+
+</body>
+</html>
