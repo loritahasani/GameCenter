@@ -6,7 +6,7 @@ services:
     startCommand: chmod +x start.sh && ./start.sh
     envVars:
       - key: MONGODB_URI
-        value: mongodb+srv://username:password@cluster.mongodb.net/gjeniu-i-vogel?retryWrites=true&w=majority
+        value: mongodb+srv://gjeniu_user:Erisa.12@cluster0.lealz2d.mongodb.net/gjeniu-i-vogel?retryWrites=true&w=majority&appName=Cluster0
       - key: SECRET_KEY
         generateValue: true
       - key: MAIL_SERVER
@@ -14,8 +14,9 @@ services:
       - key: MAIL_PORT
         value: 587
       - key: MAIL_USERNAME
-        value: your-email@gmail.com
+        value: loritahasani5@gmail.com
       - key: MAIL_PASSWORD
-        value: your-app-password
+        value: wmva xbck ibda amra
+        # TODO: Replace with your Gmail app password
       - key: MAIL_DEFAULT_SENDER
-        value: your-email@gmail.com 
+        value: loritahasani5@gmail.com 
