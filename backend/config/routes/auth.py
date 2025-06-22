@@ -26,6 +26,56 @@ def simple_test():
     """Simple test route without MongoDB"""
     return jsonify({"message": "Auth blueprint is working!"}), 200
 
+@auth_bp.route("/simple-login-test", methods=["POST"])
+def simple_login_test():
+    """Simple login test without User model"""
+    try:
+        print("Simple login test endpoint called")
+        data = request.get_json()
+        print("Request data:", data)
+        
+        if not data:
+            return jsonify({"error": "No JSON data received"}), 400
+            
+        email = data.get("email")
+        password = data.get("password")
+        
+        print(f"Login attempt for email: {email}")
+        
+        if not email or not password:
+            return jsonify({"error": "Email dhe fjalëkalimi janë të detyrueshëm"}), 400
+
+        # Just check if user exists without using User model
+        user_data = auth_bp.mongo.db.users.find_one({"email": email})
+        print(f"User found: {user_data is not None}")
+        
+        if not user_data:
+            return jsonify({"error": "Email ose fjalëkalim i pasaktë!"}), 401
+
+        # Check if email is verified
+        if not user_data.get('is_verified', False):
+            return jsonify({"error": "Ju lutem verifikoni email-in tuaj para se të hyni!"}), 401
+
+        # Check password without User model
+        if not check_password_hash(user_data['password'], password):
+            return jsonify({"error": "Email ose fjalëkalim i pasaktë!"}), 401
+
+        # Create token without User model
+        token = jwt.encode({
+            "user_id": str(user_data["_id"]),
+            "exp": datetime.utcnow() + Config.JWT_ACCESS_TOKEN_EXPIRES
+        }, Config.SECRET_KEY, algorithm="HS256")
+
+        return jsonify({
+            "token": token,
+            "role": user_data.get("role", "student"),
+            "name": user_data.get("name", ""),
+            "message": "Login successful"
+        }), 200
+    except Exception as e:
+        print(f"Simple login test error: {str(e)}")
+        return jsonify({"error": f"Gabim gjatë login-it: {str(e)}"}), 500
+
 @auth_bp.route("/test-login", methods=["POST"])
 def test_login():
     """Debug route to test login functionality"""
