@@ -136,6 +136,11 @@
             window.closeAssignmentModal = closeAssignmentModal;
             window.openEditAssignmentModal = openEditAssignmentModal;
             window.closeEditAssignmentModal = closeEditAssignmentModal;
+            window.showStudentDetail = showStudentDetail;
+            window.closeStudentDetail = closeStudentDetail;
+            window.viewSubmissions = viewSubmissions;
+            window.downloadSubmission = downloadSubmission;
+            window.deleteAssignment = deleteAssignment;
         });
 
         document.getElementById('assignment-form').addEventListener('submit', function(e) {
@@ -404,6 +409,78 @@
                 alert('An error occurred. Please try again.');
             });
         }
+
+        // Student detail functions
+        function showStudentDetail(studentId) {
+            const token = localStorage.getItem('token');
+            fetch(`${API_BASE_URL}/student/${studentId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const detailDiv = document.getElementById('student-detail');
+                const modalBg = document.getElementById('student-detail-modal-bg');
+                if (data.error) {
+                    detailDiv.innerHTML = `<p style='color:red;'>${data.error}</p>`;
+                    detailDiv.style.display = 'block';
+                    modalBg.style.display = 'block';
+                    return;
+                }
+                // Maksimumet për lojë
+                const maxPoints = { mathquiz1: 45, memorygame: 35, memory: 35, wordsearch: 30, mathquiz2: 45, mathquiz3: 45, mathquiz4: 45, mathquiz5: 45, crossword: 30, peremri: 15 };
+                let html = `<h3 style='margin-top:0;'>${data.name} <span style='font-size:0.9em; color:#888;'>(${data.email})</span></h3>`;
+                if (data.scores && Object.keys(data.scores).length > 0) {
+                    html += '<div class="student-scores-detail">';
+                    for (const [game, attempts] of Object.entries(data.scores)) {
+                        html += `<h4 style='margin-bottom:4px;'>${game}</h4><ul style='margin-top:0; margin-bottom:12px;'>`;
+                        attempts.forEach((a, i) => {
+                            let dateStr = '';
+                            if (a.date) {
+                                if (typeof a.date === 'string') {
+                                    const d = new Date(a.date);
+                                    if (!isNaN(d.getTime())) {
+                                        dateStr = d.toLocaleString();
+                                    } else {
+                                        dateStr = a.date;
+                                    }
+                                } else if (typeof a.date === 'object' && a.date !== null && a.date.$date) {
+                                    const d = new Date(a.date.$date);
+                                    if (!isNaN(d.getTime())) {
+                                        dateStr = d.toLocaleString();
+                                    }
+                                }
+                            }
+                            const max = maxPoints[game] || '?';
+                            html += `<li style='margin-bottom:2px;'>Tentativa ${i+1}: <b>${a.score} / ${max} pikë</b> <span style='color:#888;font-size:0.95em;'>${dateStr}</span></li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</div>';
+                } else {
+                    html += '<p>Nuk ka të dhëna për këtë nxënës.</p>';
+                }
+                html += `<div style='display:flex; gap:10px; margin-top:18px; justify-content:flex-end;'>`;
+                html += `<button onclick='closeStudentDetail()' style='background:#3b6cb7; color:#fff; border:none; border-radius:6px; padding:8px 18px; font-size:1em; cursor:pointer;'>Mbyll</button>`;
+                html += `</div>`;
+                detailDiv.innerHTML = html;
+                detailDiv.style.display = 'block';
+                modalBg.style.display = 'block';
+            });
+        }
+
+        function closeStudentDetail() {
+            document.getElementById('student-detail').style.display = 'none';
+            document.getElementById('student-detail-modal-bg').style.display = 'none';
+        }
+
+        // Mbyll modalin kur klikohet jashtë tij
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('student-detail');
+            const bg = document.getElementById('student-detail-modal-bg');
+            if (bg && bg.style.display === 'block' && !modal.contains(e.target) && e.target !== modal) {
+                closeStudentDetail();
+            }
+        });
     </script>
 </body>
 </html>
