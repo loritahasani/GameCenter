@@ -89,6 +89,11 @@
 
     <script src="assets/js/auth.js"></script>
     <script>
+        // API Configuration
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:5000/api' 
+            : 'https://gjeniu-i-vogel-backend.onrender.com/api';
+
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
             tabcontent = document.getElementsByClassName("tab-content");
@@ -122,7 +127,7 @@
 
         function openEditAssignmentModal(assignmentId) {
             const token = localStorage.getItem('token');
-            fetch(`http://localhost:5000/api/assignments/${assignmentId}`, {
+            fetch(`${API_BASE_URL}/assignments/${assignmentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => res.json())
@@ -157,7 +162,7 @@
             const deadline = document.getElementById('assignment-deadline').value;
             const token = localStorage.getItem('token');
 
-            fetch('http://localhost:5000/api/assignments', {
+            fetch(`${API_BASE_URL}/assignments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -192,7 +197,7 @@
             const deadline = document.getElementById('edit-assignment-deadline').value;
             const token = localStorage.getItem('token');
 
-            fetch(`http://localhost:5000/api/assignments/${assignmentId}`, {
+            fetch(`${API_BASE_URL}/assignments/${assignmentId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -223,7 +228,7 @@
                 return;
             }
 
-            fetch('http://localhost:5000/api/assignments', {
+            fetch(`${API_BASE_URL}/assignments`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -284,7 +289,7 @@
             container.style.display = 'block';
             
             const token = localStorage.getItem('token');
-            fetch(`http://localhost:5000/api/assignments/${assignmentId}/submissions`, {
+            fetch(`${API_BASE_URL}/assignments/${assignmentId}/submissions`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => res.json())
@@ -342,10 +347,10 @@
 
         function downloadSubmission(submissionId) {
             const token = localStorage.getItem('token');
-            const url = `http://localhost:5000/api/download-submission/${submissionId}`;
+            const url = `${API_BASE_URL}/download-submission/${submissionId}`;
             
             // First check if the submission exists and has a file
-            fetch(`http://localhost:5000/api/assignments/submission/${submissionId}`, {
+            fetch(`${API_BASE_URL}/assignments/submission/${submissionId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -396,7 +401,7 @@
             }
 
             const token = localStorage.getItem('token');
-            fetch(`http://localhost:5000/api/assignments/${assignmentId}`, {
+            fetch(`${API_BASE_URL}/assignments/${assignmentId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -423,7 +428,7 @@
                 window.location.href = 'index.html';
                 return;
             }
-            fetch('http://localhost:5000/api/get-scores', {
+            fetch(`${API_BASE_URL}/get-scores`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -459,7 +464,7 @@
 
         function showStudentDetail(studentId) {
             const token = localStorage.getItem('token');
-            fetch(`http://localhost:5000/api/student/${studentId}`, {
+            fetch(`${API_BASE_URL}/student/${studentId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => res.json())
@@ -537,7 +542,7 @@
             }
 
             // First load the teacher's assignments
-            fetch('http://localhost:5000/api/assignments', {
+            fetch(`${API_BASE_URL}/assignments`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -555,7 +560,7 @@
                 
                 // For each assignment, get the submissions
                 const assignmentPromises = assignments.map(assignment => {
-                    return fetch(`http://localhost:5000/api/assignments/${assignment._id}/submissions`, {
+                    return fetch(`${API_BASE_URL}/assignments/${assignment._id}/submissions`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }

@@ -34,8 +34,13 @@ if (token) {
     }
 }
 
+// API Configuration
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:5000/api' 
+    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
+
 // Test server connection
-fetch("http://localhost:5000/api/test")
+fetch(`${API_BASE_URL}/test`)
     .then(res => res.json())
     .then(data => {
         if (data.error) {
@@ -45,13 +50,10 @@ fetch("http://localhost:5000/api/test")
     })
     .catch(err => {
         console.error("Server connection error:", err);
-        loginMessage.innerText = "Cannot connect to server. Please make sure the server is running.";
+        if (loginMessage) {
+            loginMessage.innerText = "Cannot connect to server. Please make sure the server is running.";
+        }
     });
-
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:5000/api' 
-    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
 
 // Update all fetch calls to use API_BASE_URL
 async function login() {
@@ -100,7 +102,7 @@ async function login() {
 function loadUserScores() {
     if (!token) return;
 
-    fetch("http://localhost:5000/api/get-scores", {
+    fetch(`${API_BASE_URL}/get-scores`, {
         headers: {
             "Authorization": `Bearer ${token}`
         }
@@ -155,7 +157,7 @@ function sendScoreToBackend(game, points) {
         return;
     }
 
-    fetch("http://localhost:5000/api/save-score", {
+    fetch(`${API_BASE_URL}/save-score`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -210,12 +212,12 @@ function fillProfileModal(user, scores) {
 function fetchUserProfileAndScores() {
     const token = localStorage.getItem('token');
     if (!token) return;
-    fetch('http://localhost:5000/api/me', {
+    fetch(`${API_BASE_URL}/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())
     .then(user => {
-        fetch('http://localhost:5000/api/get-scores', {
+        fetch(`${API_BASE_URL}/get-scores`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(res => res.json())
@@ -263,17 +265,12 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // Logout function
 function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role"); // Also clear the role
-    
-    // Check if we're in a game file (in games/ directory) or in the main directory
-    if (window.location.pathname.includes('/games/')) {
-        // If we're in a game file, go up one directory to reach index.html
-        window.location.href = "../index.html";
-    } else {
-        // If we're in the main directory, go directly to index.html
-        window.location.href = "index.html";
-    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('name');
+    localStorage.removeItem('userClass');
+    // Redirect to index.html, which is in the parent directory
+    window.location.href = './index.html'; 
 }
 
 // Go back to games list function
@@ -295,57 +292,37 @@ function goBackToGames() {
     }
 }
 
-function register() {
+async function register() {
     const name = document.getElementById("reg-name").value;
     const email = document.getElementById("reg-email").value;
     const password = document.getElementById("reg-password").value;
     const role = document.getElementById("reg-role").value;
     const school = document.getElementById("reg-school").value;
-    const registerMessage = document.getElementById("register-message");
+    const teacherId = document.getElementById("reg-teacher").value;
+    const teacherClass = document.getElementById("reg-teacher-class").value;
+    const message = document.getElementById("register-message");
 
-    if (!name || !email || !password || !school || !role) {
-        registerMessage.innerText = "Ju lutem plotësoni të gjitha fushat e kërkuara.";
-        return;
-    }
-
-    const registrationData = { name, email, password, role, school };
-
-    if (role === 'student') {
-        const teacherId = document.getElementById("reg-teacher").value;
-        if (!teacherId) {
-            registerMessage.innerText = "Ju lutem zgjidhni një mësues.";
-            return;
-        }
-        registrationData.teacher_id = teacherId;
-    } else if (role === 'teacher') {
-        const classLevel = document.getElementById("reg-teacher-class").value;
-        if (!classLevel) {
-            registerMessage.innerText = "Ju lutem zgjidhni një klasë.";
-            return;
-        }
-        registrationData.class_level = classLevel;
-    }
-
-    registerMessage.innerText = "Duke u regjistruar...";
-
-    fetch("http://localhost:5000/api/register", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(registrationData)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.error) {
-            registerMessage.innerText = data.error;
+    try {
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password, role, school, teacher_id: teacherId, teacher_class: teacherClass })
+        });
+        const data = await response.json();
+        if (response.ok) {
+            message.innerText = data.message;
+            message.style.color = "green";
+            document.getElementById("verify-email").value = email;
+            document.getElementById("register-container").style.display = "none";
+            document.getElementById("verify-container").style.display = "block";
         } else {
-            alert(data.message);
-            toggleForms(); // Switch back to login form
+            message.innerText = data.error || "Regjistrimi dështoi.";
+            message.style.color = "red";
         }
-    })
-    .catch(err => {
-        console.error('Registration failed:', err);
-        registerMessage.innerText = 'Regjistrimi dështoi. Ju lutem provoni përsëri.';
-    });
+    } catch (error) {
+        message.innerText = "Gabim në lidhje me serverin.";
+        message.style.color = "red";
+    }
 }
 
 function toggleForms() {
