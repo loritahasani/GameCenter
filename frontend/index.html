@@ -703,7 +703,9 @@
         }
 
         function selectClass(grade) {
+            console.log('selectClass called with grade:', grade);
             selectedClass = grade;
+            console.log('selectedClass set to:', selectedClass);
             document.getElementById('menu').style.display = 'none';
             document.getElementById('games-menu').style.display = 'block';
             
@@ -790,10 +792,14 @@
         }
 
         function startGame(game) {
+            console.log('startGame called with game:', game);
+            console.log('selectedClass value:', selectedClass);
             if (!selectedClass) {
+                console.error('selectedClass is not set!');
                 alert('Ju lutem zgjidhni një klasë fillimisht!');
                 return;
             }
+            console.log('Redirecting to:', `games/${game}.html`);
             window.location.href = `games/${game}.html`;
         }
 
