@@ -5,61 +5,65 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 
 // Authentication functions
 let token = localStorage.getItem("token");
-const loginContainer = document.getElementById("login-container");
-const menu = document.getElementById("menu");
-const loginMessage = document.getElementById("login-message");
 
-// Redirect në index.html nëse nuk ka token, përveç në index.html vetë
-if (!localStorage.getItem('token') && !window.location.pathname.endsWith('index.html')) {
-    window.location.href = 'index.html';
-}
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    const loginContainer = document.getElementById("login-container");
+    const menu = document.getElementById("menu");
+    const loginMessage = document.getElementById("login-message");
 
-// Check if user is already logged in
-if (token) {
-    // User is logged in, keep login container hidden
-    if (window.location.pathname.includes('teachers.html')) {
-        const scoresContainer = document.getElementById('scores-container');
-        if (scoresContainer) {
-            scoresContainer.style.display = 'block';
-            loadScores();
-        }
-    } else {
-        if (menu) menu.style.display = "block";
-        loadUserScores();
-        showProfileIconIfLoggedIn();
-        if (typeof loadGames === 'function') {
-            loadGames();
-        }
+    // Redirect në index.html nëse nuk ka token, përveç në index.html vetë
+    if (!localStorage.getItem('token') && !window.location.pathname.endsWith('index.html')) {
+        window.location.href = 'index.html';
     }
-} else {
-    // User is not logged in, show login form
-    if (loginContainer) {
-        loginContainer.style.display = "block";
-    }
-    if (menu) menu.style.display = "none";
-    const scoresContainer = document.getElementById('scores-container');
-    if (scoresContainer) {
-        scoresContainer.style.display = "none";
-    }
-}
 
-// Test server connection
-fetch(`${API_BASE_URL}/test`)
-    .then(res => res.json())
-    .then(data => {
-        if (data.error) {
-            console.error("Server error:", data.error);
-            if (loginMessage) {
-                loginMessage.innerText = "Server error: " + data.error;
+    // Check if user is already logged in
+    if (token) {
+        // User is logged in, keep login container hidden
+        if (window.location.pathname.includes('teachers.html')) {
+            const scoresContainer = document.getElementById('scores-container');
+            if (scoresContainer) {
+                scoresContainer.style.display = 'block';
+                loadScores();
+            }
+        } else {
+            if (menu) menu.style.display = "block";
+            loadUserScores();
+            showProfileIconIfLoggedIn();
+            if (typeof loadGames === 'function') {
+                loadGames();
             }
         }
-    })
-    .catch(err => {
-        console.error("Server connection error:", err);
-        if (loginMessage) {
-            loginMessage.innerText = "Cannot connect to server. Please make sure the server is running.";
+    } else {
+        // User is not logged in, show login form
+        if (loginContainer) {
+            loginContainer.style.display = "block";
         }
-    });
+        if (menu) menu.style.display = "none";
+        const scoresContainer = document.getElementById('scores-container');
+        if (scoresContainer) {
+            scoresContainer.style.display = "none";
+        }
+    }
+
+    // Test server connection
+    fetch(`${API_BASE_URL}/test`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                console.error("Server error:", data.error);
+                if (loginMessage) {
+                    loginMessage.innerText = "Server error: " + data.error;
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Server connection error:", err);
+            if (loginMessage) {
+                loginMessage.innerText = "Cannot connect to server. Please make sure the server is running.";
+            }
+        });
+});
 
 async function login() {
     const email = document.getElementById('username').value;

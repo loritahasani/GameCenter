@@ -89,10 +89,7 @@
 
     <script src="assets/js/auth.js"></script>
     <script>
-        // API Configuration for teacher panel
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? 'http://localhost:5000/api' 
-            : 'https://gjeniu-i-vogel-backend.onrender.com/api';
+        // openTab function is already defined in auth.js
         
         function openAssignmentModal() {
             document.getElementById('assignment-modal').style.display = 'flex';
@@ -382,22 +379,3 @@
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Error deleting assignment: ' + data.error);
-                } else {
-                    alert(data.message);
-                    loadAssignments();
-                }
-            })
-            .catch(err => {
-                console.error('Failed to delete assignment:', err);
-                alert('An error occurred. Please try again.');
-            });
-        }
-    </script>
-</body>
-</html>
