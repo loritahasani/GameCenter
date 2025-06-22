@@ -151,8 +151,6 @@
     <script src="assets/js/script.js"></script>
     <script>
 
-        let selectedClass = null;
-
         const classData = [
             { grade: 1, label: 'Klasa 1', image: 'assets/images/grade1.png' },
             { grade: 2, label: 'Klasa 2', image: 'assets/images/grade2.gif' },
@@ -701,8 +699,7 @@
         }
 
         function selectClass(grade) {
-            selectedClass = grade;
-            console.log('Class selected:', grade, 'selectedClass now:', selectedClass);
+            localStorage.setItem('selectedClass', grade);
             document.getElementById('menu').style.display = 'none';
             document.getElementById('games-menu').style.display = 'block';
             
@@ -768,7 +765,7 @@
         }
 
         function backToClasses() {
-            selectedClass = null;
+            localStorage.removeItem('selectedClass');
             document.getElementById('games-menu').style.display = 'none';
             document.getElementById('menu').style.display = 'block';
         }
@@ -789,13 +786,11 @@
         }
 
         function startGame(game) {
-            console.log('Starting game:', game, 'selectedClass:', selectedClass);
-            if (!selectedClass) {
-                console.error('selectedClass is null or undefined!');
+            const currentClass = localStorage.getItem('selectedClass');
+            if (!currentClass) {
                 alert('Ju lutem zgjidhni një klasë fillimisht!');
                 return;
             }
-            console.log('Redirecting to:', `games/${game}.html`);
             window.location.href = `games/${game}.html`;
         }
 
