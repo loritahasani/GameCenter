@@ -1,3 +1,8 @@
+// API Configuration
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:5000/api' 
+    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
+
 // Authentication functions
 let token = localStorage.getItem("token");
 const loginContainer = document.getElementById("login-container");
@@ -33,11 +38,6 @@ if (token) {
         document.getElementById('scores-container').style.display = "none";
     }
 }
-
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:5000/api' 
-    : 'https://gjeniu-i-vogel-backend.onrender.com/api';
 
 // Test server connection
 fetch(`${API_BASE_URL}/test`)
@@ -269,8 +269,11 @@ function logout() {
     localStorage.removeItem('role');
     localStorage.removeItem('name');
     localStorage.removeItem('userClass');
-    // Redirect to index.html, which is in the parent directory
-    window.location.href = './index.html'; 
+    if (window.location.pathname.includes('/games/')) {
+        window.location.href = "../index.html";
+    } else {
+        window.location.href = "index.html";
+    }
 }
 
 // Go back to games list function
