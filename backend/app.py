@@ -4,12 +4,24 @@ from flask_pymongo import PyMongo
 from config.config import Config
 from config.routes.auth import auth_bp
 from config.routes.scores import scores_bp
+from config.routes.assignments import assignments_bp
 import os
 from werkzeug.exceptions import NotFound
 
 def create_app():
     app = Flask(__name__, static_folder='../frontend', static_url_path='')
-    CORS(app)
+    
+    # Configure CORS for production
+    CORS(app, origins=[
+        "http://localhost:3000",
+        "http://localhost:8000", 
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8000",
+        "https://gjeniu-i-vogel.onrender.com",
+        "https://gjeniu-i-vogel-frontend.onrender.com",
+        "https://gjeniu-i-vogel.vercel.app",
+        "https://gjeniu-i-vogel.netlify.app"
+    ])
     
     # Load configuration
     app.config.from_object(Config)
@@ -26,10 +38,12 @@ def create_app():
     auth_bp.mongo = mongo
     scores_bp.mongo = mongo
     scores_bp.upload_folder = app.config['UPLOAD_FOLDER']
+    assignments_bp.mongo = mongo
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api')
     app.register_blueprint(scores_bp, url_prefix='/api')
+    app.register_blueprint(assignments_bp, url_prefix='/api')
     
     # Serve frontend files
     @app.route('/')

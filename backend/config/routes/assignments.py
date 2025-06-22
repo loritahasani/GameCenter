@@ -1,9 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from bson import ObjectId
 from functools import wraps
 import jwt
 from config.config import Config
 from datetime import datetime
+import os
+import uuid
 
 assignments_bp = Blueprint('assignments', __name__)
 
@@ -74,6 +76,74 @@ def get_assignments(current_user):
         assignment["teacher_id"] = str(assignment["teacher_id"])
 
     return jsonify(assignments), 200
+
+@assignments_bp.route("/assignments/<assignment_id>", methods=["GET"])
+@token_required
+def get_assignment(current_user, assignment_id):
+    if current_user.get("role") != "teacher":
+        return jsonify({"error": "Only teachers can view assignments."}), 403
+
+    try:
+        assignment = assignments_bp.mongo.db.assignments.find_one({"_id": ObjectId(assignment_id)})
+        if not assignment:
+            return jsonify({"error": "Assignment not found."}), 404
+        
+        if assignment["teacher_id"] != current_user["_id"]:
+            return jsonify({"error": "You can only view your own assignments."}), 403
+
+        assignment["_id"] = str(assignment["_id"])
+        assignment["teacher_id"] = str(assignment["teacher_id"])
+        
+        return jsonify(assignment), 200
+    except Exception as e:
+        return jsonify({"error": "Invalid assignment ID."}), 400
+
+@assignments_bp.route("/assignments/<assignment_id>", methods=["PUT"])
+@token_required
+def update_assignment(current_user, assignment_id):
+    if current_user.get("role") != "teacher":
+        return jsonify({"error": "Only teachers can update assignments."}), 403
+
+    data = request.get_json()
+    title = data.get("title")
+    description = data.get("description")
+    deadline = data.get("deadline")
+
+    if not title or not description:
+        return jsonify({"error": "Title and description are required."}), 400
+
+    try:
+        # Check if assignment exists and belongs to the teacher
+        assignment = assignments_bp.mongo.db.assignments.find_one({"_id": ObjectId(assignment_id)})
+        if not assignment:
+            return jsonify({"error": "Assignment not found."}), 404
+        
+        if assignment["teacher_id"] != current_user["_id"]:
+            return jsonify({"error": "You can only update your own assignments."}), 403
+
+        # Update the assignment
+        update_data = {
+            "title": title,
+            "description": description
+        }
+        
+        if deadline:
+            update_data["deadline"] = datetime.fromisoformat(deadline.replace('Z', '+00:00'))
+        else:
+            update_data["deadline"] = None
+
+        result = assignments_bp.mongo.db.assignments.update_one(
+            {"_id": ObjectId(assignment_id)},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count > 0:
+            return jsonify({"message": "Assignment updated successfully."}), 200
+        else:
+            return jsonify({"error": "Failed to update assignment."}), 500
+            
+    except Exception as e:
+        return jsonify({"error": "Invalid assignment ID or data."}), 400
 
 # Game and content filtering logic
 GAME_CONFIG = {
@@ -177,8 +247,29 @@ def submit_assignment(current_user):
     }
 
     if file and file.filename != '':
-        # In a real app, save file to a secure location (e.g., S3) and store URL
+        # Create uploads directory if it doesn't exist
+        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        print(f"DEBUG: Upload directory: {upload_dir}")
+        print(f"DEBUG: Original filename: {file.filename}")
+        
+        # Generate unique filename to avoid conflicts
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        print(f"DEBUG: Unique filename: {unique_filename}")
+        print(f"DEBUG: Full file path: {file_path}")
+        
+        # Save the file
+        file.save(file_path)
+        
+        print(f"DEBUG: File saved successfully: {os.path.exists(file_path)}")
+        
         submission["filename"] = file.filename
+        submission["file_path"] = unique_filename  # Store the unique filename for retrieval
+        
     if message:
         submission["message"] = message
 
@@ -251,6 +342,141 @@ def get_assignment_submissions(current_user, assignment_id):
         
     except Exception as e:
         return jsonify({"error": "Invalid assignment ID."}), 400
+
+@assignments_bp.route("/assignments/submission/<submission_id>", methods=["GET"])
+@token_required
+def get_submission(current_user, submission_id):
+    if current_user.get("role") != "teacher":
+        return jsonify({"error": "Only teachers can view submissions."}), 403
+
+    try:
+        # Get the submission
+        submission = assignments_bp.mongo.db.submissions.find_one({"_id": ObjectId(submission_id)})
+        if not submission:
+            return jsonify({"error": "Submission not found."}), 404
+        
+        # Check if the assignment belongs to the teacher
+        assignment = assignments_bp.mongo.db.assignments.find_one({"_id": submission["assignment_id"]})
+        if not assignment or assignment["teacher_id"] != current_user["_id"]:
+            return jsonify({"error": "You can only view submissions for your own assignments."}), 403
+        
+        # Convert ObjectIds to strings
+        submission["_id"] = str(submission["_id"])
+        submission["assignment_id"] = str(submission["assignment_id"])
+        submission["student_id"] = str(submission["student_id"])
+        
+        # Get student name
+        student = assignments_bp.mongo.db.users.find_one({"_id": submission["student_id"]})
+        if student:
+            submission["student_name"] = student.get("name", "E panjohur")
+        else:
+            submission["student_name"] = "E panjohur"
+        
+        return jsonify(submission), 200
+        
+    except Exception as e:
+        return jsonify({"error": "Invalid submission ID."}), 400
+
+@assignments_bp.route("/download-submission/<submission_id>", methods=["GET"])
+def download_submission(submission_id):
+    # Get token from URL parameter for file downloads
+    token = request.args.get('token')
+    if not token:
+        return jsonify({"error": "Token mungon!"}), 401
+    
+    try:
+        # Decode token
+        data = jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
+        current_user = assignments_bp.mongo.db.users.find_one({"_id": ObjectId(data["user_id"])})
+        if not current_user:
+            return jsonify({"error": "Përdoruesi nuk u gjet!"}), 401
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token ka skaduar!"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Token i pavlefshëm!"}), 401
+
+    if current_user.get("role") != "teacher":
+        return jsonify({"error": "Only teachers can download submissions."}), 403
+
+    try:
+        # Get the submission
+        submission = assignments_bp.mongo.db.submissions.find_one({"_id": ObjectId(submission_id)})
+        if not submission:
+            return jsonify({"error": "Submission not found."}), 404
+        
+        # Check if the assignment belongs to the teacher
+        assignment = assignments_bp.mongo.db.assignments.find_one({"_id": submission["assignment_id"]})
+        if not assignment or assignment["teacher_id"] != current_user["_id"]:
+            return jsonify({"error": "You can only download submissions for your own assignments."}), 403
+        
+        # Check if submission has a file
+        if not submission.get("file_path"):
+            return jsonify({"error": "No file found in this submission."}), 404
+        
+        # Get the file path
+        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'uploads')
+        file_path = os.path.join(upload_dir, submission["file_path"])
+        
+        print(f"DEBUG: Upload directory: {upload_dir}")
+        print(f"DEBUG: File path: {file_path}")
+        print(f"DEBUG: File exists: {os.path.exists(file_path)}")
+        
+        if not os.path.exists(file_path):
+            return jsonify({"error": "File not found on server."}), 404
+        
+        # Send the file
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=submission["filename"]
+        )
+        
+    except Exception as e:
+        return jsonify({"error": "Invalid submission ID."}), 400
+
+@assignments_bp.route("/debug/submissions", methods=["GET"])
+@token_required
+def debug_submissions(current_user):
+    if current_user.get("role") != "teacher":
+        return jsonify({"error": "Only teachers can view debug info."}), 403
+
+    try:
+        # Get all submissions for this teacher's assignments
+        teacher_assignments = list(assignments_bp.mongo.db.assignments.find({
+            "teacher_id": current_user["_id"]
+        }))
+        
+        assignment_ids = [assignment["_id"] for assignment in teacher_assignments]
+        
+        submissions = list(assignments_bp.mongo.db.submissions.find({
+            "assignment_id": {"$in": assignment_ids}
+        }))
+
+        # Convert ObjectIds to strings and add assignment info
+        for submission in submissions:
+            submission["_id"] = str(submission["_id"])
+            submission["assignment_id"] = str(submission["assignment_id"])
+            submission["student_id"] = str(submission["student_id"])
+            
+            # Get assignment title
+            assignment = assignments_bp.mongo.db.assignments.find_one({"_id": submission["assignment_id"]})
+            if assignment:
+                submission["assignment_title"] = assignment.get("title", "Unknown")
+            
+            # Get student name
+            student = assignments_bp.mongo.db.users.find_one({"_id": submission["student_id"]})
+            if student:
+                submission["student_name"] = student.get("name", "Unknown")
+            else:
+                submission["student_name"] = "Unknown"
+
+        return jsonify({
+            "total_submissions": len(submissions),
+            "submissions": submissions
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @assignments_bp.route("/test-games", methods=["GET"])
 def test_games():

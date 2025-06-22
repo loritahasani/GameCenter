@@ -56,7 +56,7 @@ def register():
         class_level = data.get('class_level')
         if not class_level:
             return jsonify({'error': 'Ju lutem zgjidhni një klasë.'}), 400
-        user_data['class_level'] = class_level
+        user_data['class_level'] = int(class_level)
     elif role == 'student':
         teacher_id = data.get('teacher_id')
         if not teacher_id:
@@ -135,7 +135,7 @@ def verify_email():
     return jsonify({"message": "Email-i u verifikua me sukses!"}), 200
 
 def send_verification_email(to_email, code):
-    subject = "Kodi i verifikimit për GameCenter"
+    subject = "Kodi i verifikimit për Gjeniu i vogël"
     body = f"Përshëndetje!\n\nKodi juaj i verifikimit është: {code}\n\nFaleminderit që u regjistruat!"
     msg = MIMEText(body)
     msg["Subject"] = subject
@@ -248,4 +248,98 @@ def debug_teachers():
             teacher['_id'] = str(teacher['_id'])
         return jsonify({'all_teachers': all_teachers, 'count': len(all_teachers)}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.json
+    email = data.get("email")
+    
+    if not email:
+        return jsonify({"error": "Email është i detyrueshëm."}), 400
+    
+    user = auth_bp.mongo.db.users.find_one({"email": email})
+    if not user:
+        return jsonify({"error": "Nuk u gjet përdorues me këtë email."}), 404
+    
+    # Generate reset token
+    reset_token = str(random.randint(100000, 999999))
+    reset_expires = datetime.utcnow() + timedelta(hours=1)  # Token valid for 1 hour
+    
+    try:
+        auth_bp.mongo.db.users.update_one(
+            {"email": email},
+            {"$set": {
+                "reset_token": reset_token,
+                "reset_expires": reset_expires
+            }}
+        )
+        
+        # Send reset email
+        send_reset_email(email, reset_token)
+        
+        return jsonify({"message": "Email-i për rivendosjen e fjalëkalimit u dërgua me sukses!"}), 200
+    except Exception as e:
+        print(f"Forgot password error: {str(e)}")
+        return jsonify({"error": "Gabim gjatë dërgimit të email-it. Provoni përsëri."}), 500
+
+def send_reset_email(to_email, reset_token):
+    subject = "Rivendos Fjalëkalimin - Gjeniu i vogël"
+    body = f"""Përshëndetje!
+
+Keni kërkuar të rivendosni fjalëkalimin tuaj për Gjeniu i vogël.
+
+Kodi juaj për rivendosjen e fjalëkalimit është: {reset_token}
+
+Ky kod është i vlefshëm për 1 orë.
+
+Nëse nuk keni kërkuar këtë, ju lutem injoroni këtë email.
+
+Faleminderit!
+Gjeniu i vogël Team"""
+    
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = Config.MAIL_DEFAULT_SENDER
+    msg["To"] = to_email
+    
+    try:
+        with smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT) as server:
+            server.starttls()
+            server.login(Config.MAIL_USERNAME, Config.MAIL_PASSWORD)
+            server.sendmail(Config.MAIL_DEFAULT_SENDER, [to_email], msg.as_string())
+    except Exception as e:
+        print(f"Gabim gjatë dërgimit të emailit të reset: {e}")
+
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    data = request.json
+    email = data.get("email")
+    reset_token = data.get("reset_token")
+    new_password = data.get("new_password")
+    
+    if not email or not reset_token or not new_password:
+        return jsonify({"error": "Të gjitha fushat janë të detyrueshme."}), 400
+    
+    user = auth_bp.mongo.db.users.find_one({"email": email})
+    if not user:
+        return jsonify({"error": "Përdoruesi nuk u gjet."}), 404
+    
+    if not user.get("reset_token") or user.get("reset_token") != reset_token:
+        return jsonify({"error": "Kodi i rivendosjes është i pasaktë."}), 400
+    
+    if user.get("reset_expires") and user.get("reset_expires") < datetime.utcnow():
+        return jsonify({"error": "Kodi i rivendosjes ka skaduar."}), 400
+    
+    # Hash new password and update user
+    hashed_password = generate_password_hash(new_password)
+    
+    try:
+        auth_bp.mongo.db.users.update_one(
+            {"email": email},
+            {"$set": {"password": hashed_password}, "$unset": {"reset_token": "", "reset_expires": ""}}
+        )
+        return jsonify({"message": "Fjalëkalimi u ndryshua me sukses!"}), 200
+    except Exception as e:
+        print(f"Reset password error: {str(e)}")
+        return jsonify({"error": "Gabim gjatë ndryshimit të fjalëkalimit. Provoni përsëri."}), 500 

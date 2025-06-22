@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: gjeniu-i-vogel-backend
+    env: python
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: chmod +x start.sh && ./start.sh
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb+srv://username:password@cluster.mongodb.net/gjeniu-i-vogel?retryWrites=true&w=majority
+      - key: SECRET_KEY
+        generateValue: true
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: your-email@gmail.com
+      - key: MAIL_PASSWORD
+        value: your-app-password
+      - key: MAIL_DEFAULT_SENDER
+        value: your-email@gmail.com 
