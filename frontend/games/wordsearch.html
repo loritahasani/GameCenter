@@ -37,7 +37,16 @@
       ← Kthehu te Lojërat
   </button>
 
-<div id="game">
+<div id="menu">
+  <div class="math-quiz-menu">
+    <span class="game-icon">📝</span>
+    <h1>Gjej Fjalët</h1>
+    <br>
+    <button class="start-btn" onclick="startGame()">Start</button>
+  </div>
+</div>
+
+<div id="game" style="display:none;">
   <span id="confetti" class="confetti" style="display:none;"></span>
   <h2>Gjej fjalët:</h2>
   <div id="word-list" class="word-list"></div>
@@ -50,8 +59,8 @@
 <script src="../assets/js/auth.js"></script>
 <script>
 
-
-let token = localStorage.getItem("token");
+// This is already declared in auth.js
+// let token = localStorage.getItem("token");
 
 const wordSets = [
   ["ARIU", "LULE", "BORA", "USHQIM", "BUKË"],
@@ -250,9 +259,14 @@ function showConfetti() {
   }
 }
 
-// Automatically start the game on page load
-window.addEventListener('DOMContentLoaded', (event) => {
+function startGame() {
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
     generateGrid();
+}
+
+// Load user scores when the page loads, but don't start the game
+window.addEventListener('DOMContentLoaded', (event) => {
     loadUserScores();
 });
 </script>

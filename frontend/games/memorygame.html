@@ -44,7 +44,7 @@
   <p id="login-message" style="color:red;"></p>
 </div>
 
-<div id="menu" style="display:none;">
+<div id="menu">
   <div class="math-quiz-menu">
     <span class="game-icon">🧠</span>
     <h1>Memory Game</h1>
@@ -53,7 +53,7 @@
   </div>
 </div>
 
-<div id="game">
+<div id="game" style="display:none;">
     <span id="confetti" class="confetti" style="display:none;"></span>
     <h2>Memory Game</h2>
     <p class="progress-text">Gjej çiftet që përputhen!</p>
@@ -144,14 +144,21 @@ function resetGame() {
     board.innerHTML = "";
     flipped = [];
     matched = [];
+    score = 0;
+    moves = 0;
     cards = generateUniqueCards();
     shuffle(cards);
     cards.forEach(createCard);
 }
 
-// Automatically start the game on page load
-window.addEventListener('DOMContentLoaded', (event) => {
+function startGame() {
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
     resetGame();
+}
+
+// Load user scores when the page loads, but don't start the game
+window.addEventListener('DOMContentLoaded', (event) => {
     loadUserScores();
 });
 

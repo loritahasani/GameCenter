@@ -2,8 +2,11 @@ services:
   - type: web
     name: gjeniu-i-vogel-backend
     env: python
-    buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: chmod +x start.sh && ./start.sh
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn run:app"
+    healthCheck:
+      path: /api/health
+      initialDelaySeconds: 15
     envVars:
       - key: MONGODB_URI
         value: mongodb+srv://gjeniu_user:Erisa.12@cluster0.lealz2d.mongodb.net/gjeniu-i-vogel?retryWrites=true&w=majority&appName=Cluster0

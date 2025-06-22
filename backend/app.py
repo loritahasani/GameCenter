@@ -8,9 +8,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Initialize extensions with proper CORS configuration
-    CORS(app, origins=["*"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
-         allow_headers=["Content-Type", "Authorization"])
+    # Initialize extensions
+    CORS(app, resources={r"/api/*": {"origins": "*"}}) # Recommended CORS setup
     JWTManager(app)
     
     # Initialize MongoDB
@@ -40,6 +39,10 @@ def create_app():
         def basic_test():
             return jsonify({"message": "App is working but blueprints failed to load", "error": str(e)}), 200
     
+    @app.route('/api/health')
+    def health_check():
+        return jsonify({"status": "ok"}), 200
+
     # Add a test route to check MongoDB connection
     @app.route('/api/debug-mongo')
     def debug_mongo():
