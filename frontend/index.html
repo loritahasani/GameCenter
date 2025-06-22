@@ -538,7 +538,6 @@
                         const card = document.createElement('div');
                         card.className = 'class-card';
                         card.onclick = () => {
-                            selectedClass = studentClass.grade; // Set selectedClass when clicking
                             selectClass(studentClass.grade);
                         };
 
@@ -683,7 +682,6 @@
                 const card = document.createElement('div');
                 card.className = 'class-card';
                 card.onclick = () => {
-                    selectedClass = cls.grade; // Set selectedClass when clicking
                     selectClass(cls.grade);
                 };
 
@@ -703,9 +701,8 @@
         }
 
         function selectClass(grade) {
-            console.log('selectClass called with grade:', grade);
             selectedClass = grade;
-            console.log('selectedClass set to:', selectedClass);
+            console.log('Class selected:', grade, 'selectedClass now:', selectedClass);
             document.getElementById('menu').style.display = 'none';
             document.getElementById('games-menu').style.display = 'block';
             
@@ -792,10 +789,9 @@
         }
 
         function startGame(game) {
-            console.log('startGame called with game:', game);
-            console.log('selectedClass value:', selectedClass);
+            console.log('Starting game:', game, 'selectedClass:', selectedClass);
             if (!selectedClass) {
-                console.error('selectedClass is not set!');
+                console.error('selectedClass is null or undefined!');
                 alert('Ju lutem zgjidhni një klasë fillimisht!');
                 return;
             }
