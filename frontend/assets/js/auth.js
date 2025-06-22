@@ -90,31 +90,39 @@ async function login() {
         console.log('Response status:', response.status);
         console.log('Response headers:', response.headers);
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.log('Error response data:', errorData);
+            message.innerText = errorData.error || `Gabim në server (${response.status})!`;
+            message.style.color = 'red';
+            return;
+        }
+
         const data = await response.json();
         console.log('Response data:', data);
 
-        if (response.ok) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('role', data.role);
-            localStorage.setItem('name', data.name);
-            
-            if (data.role === 'teacher') {
-                window.location.href = 'teachers.html';
-            } else {
-                document.body.classList.remove('auth-view');
-                document.body.classList.add('games-view');
-                loadUserProfile();
-                loadGames();
-            }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('name', data.name);
+        
+        if (data.role === 'teacher') {
+            window.location.href = 'teachers.html';
         } else {
-            message.innerText = data.error || 'Gabim gjatë login-it!';
-            message.style.color = 'red';
+            document.body.classList.remove('auth-view');
+            document.body.classList.add('games-view');
+            loadUserProfile();
+            loadGames();
         }
     } catch (error) {
         console.error('Login error details:', error);
         console.error('Error name:', error.name);
         console.error('Error message:', error.message);
-        message.innerText = 'Gabim në lidhje me serverin!';
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            message.innerText = 'Nuk mund të lidhet me serverin. Kontrolloni lidhjen e internetit!';
+        } else {
+            message.innerText = 'Gabim në lidhje me serverin!';
+        }
         message.style.color = 'red';
     }
 }

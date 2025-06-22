@@ -537,7 +537,10 @@
                         // Create only the student's assigned class button
                         const card = document.createElement('div');
                         card.className = 'class-card';
-                        card.onclick = () => selectClass(studentClass.grade);
+                        card.onclick = () => {
+                            selectedClass = studentClass.grade; // Set selectedClass when clicking
+                            selectClass(studentClass.grade);
+                        };
 
                         const img = document.createElement('img');
                         img.src = studentClass.image;
@@ -679,7 +682,10 @@
             classData.forEach(cls => {
                 const card = document.createElement('div');
                 card.className = 'class-card';
-                card.onclick = () => selectClass(cls.grade);
+                card.onclick = () => {
+                    selectedClass = cls.grade; // Set selectedClass when clicking
+                    selectClass(cls.grade);
+                };
 
                 const img = document.createElement('img');
                 img.src = cls.image;
