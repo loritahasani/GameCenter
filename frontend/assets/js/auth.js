@@ -227,6 +227,20 @@ function showProfileIconIfLoggedIn() {
     }
 }
 
+function loadUserProfile() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    // Fetch user profile and scores
+    fetchUserProfileAndScores();
+    
+    // Show profile icon
+    showProfileIconIfLoggedIn();
+    
+    // Load user scores
+    loadUserScores();
+}
+
 function fillProfileModal(user, scores) {
     document.getElementById('profile-username').innerText = user?.name || '';
     document.getElementById('profile-email').innerText = user?.email || '';
