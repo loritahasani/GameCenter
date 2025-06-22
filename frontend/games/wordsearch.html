@@ -37,29 +37,13 @@
       ← Kthehu te Lojërat
   </button>
 
-<div id="login-container">
-  <input type="text" id="username" placeholder="Username" />
-  <input type="password" id="password" placeholder="Password" />
-  <button onclick="login()">Login</button>
-  <p id="login-message" style="color:red;"></p>
-</div>
-
-<div id="menu" style="display:none;">
-  <div class="math-quiz-menu">
-    <span class="game-icon">🔍</span>
-    <h1>Word Search Game</h1>
-    <br>
-    <button class="start-btn" onclick="startGame()">Start</button>
-  </div>
-</div>
-
-<div id="game" style="display:none;">
+<div id="game">
   <span id="confetti" class="confetti" style="display:none;"></span>
   <h2>Gjej fjalët:</h2>
   <div id="word-list" class="word-list"></div>
   <div id="grid" class="word-search-grid"></div>
   <div id="feedback" class="memory-game-message"></div>
-  <button id="restart-button" class="memory-reset-button" onclick="startGame()">Rifillo</button>
+  <button id="restart-button" class="memory-reset-button" onclick="generateGrid()">Rifillo</button>
   <button id="finish-button" class="play-button" onclick="finishGame()">Përfunduat të gjitha</button>
 </div>
 
@@ -83,18 +67,6 @@ let selectedCells = [];
 let mouseDown = false;
 let currentSetIndex = 0;
 let score = 0;
-
-function startGame() {
-  document.getElementById('menu').style.display = 'none';
-  document.getElementById('game').style.display = 'block';
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('finish-button').style.display = 'none';
-  document.getElementById('restart-button').style.display = 'none';
-  foundWords = [];
-  selectedCells = [];
-  score = 0;
-  generateGrid();
-}
 
 function generateGrid() {
   const grid = document.getElementById('grid');
@@ -229,8 +201,6 @@ function markAsFound() {
 function finishGame() {
   sendScoreToBackend("wordsearch", score);
   document.getElementById('restart-button').style.display = 'inline-block';
-  document.getElementById('game').style.display = 'none';
-  document.getElementById('menu').style.display = 'block';
   loadUserScores();
 }
 
@@ -279,6 +249,12 @@ function showConfetti() {
     setTimeout(() => { confetti.style.display = 'none'; confetti.innerHTML = ''; }, 1800);
   }
 }
+
+// Automatically start the game on page load
+window.addEventListener('DOMContentLoaded', (event) => {
+    generateGrid();
+    loadUserScores();
+});
 </script>
 
 </body>

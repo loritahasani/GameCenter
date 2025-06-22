@@ -53,7 +53,7 @@
   </div>
 </div>
 
-<div id="game" style="display:none;">
+<div id="game">
     <span id="confetti" class="confetti" style="display:none;"></span>
     <h2>Memory Game</h2>
     <p class="progress-text">Gjej çiftet që përputhen!</p>
@@ -73,15 +73,6 @@ let flipped = [];
 let matched = [];
 let score = 0;
 let moves = 0;
-
-function startGame() {
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('game').style.display = 'block';
-    document.getElementById('game-message').textContent = '';
-    score = 0;
-    moves = 0;
-    resetGame();
-}
 
 function generateUniqueCards() {
     let cardEmojis = [];
@@ -157,6 +148,12 @@ function resetGame() {
     shuffle(cards);
     cards.forEach(createCard);
 }
+
+// Automatically start the game on page load
+window.addEventListener('DOMContentLoaded', (event) => {
+    resetGame();
+    loadUserScores();
+});
 
 function loadUserScores() {
     if (!token) return;
