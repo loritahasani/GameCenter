@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Memory Game</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/mobile-games.css">
 </head>
 <body>
     <!-- Profili i nxënësit -->
@@ -96,6 +97,9 @@ function createCard(value) {
     btn.className = "memory-card";
     btn.disabled = false;
 
+    // Add touch-action for better mobile interaction
+    btn.style.touchAction = "manipulation";
+
     btn.addEventListener("click", () => {
         if (flipped.length < 2 && !flipped.includes(btn)) {
             btn.textContent = value;
@@ -107,6 +111,20 @@ function createCard(value) {
             }
         }
     });
+
+    // Add touch event for better mobile response
+    btn.addEventListener("touchstart", (e) => {
+        e.preventDefault(); // Prevent double-tap zoom
+        if (flipped.length < 2 && !flipped.includes(btn)) {
+            btn.textContent = value;
+            flipped.push(btn);
+            moves++;
+
+            if (flipped.length === 2) {
+                setTimeout(checkMatch, 500);
+            }
+        }
+    }, { passive: false });
 
     board.appendChild(btn);
 }

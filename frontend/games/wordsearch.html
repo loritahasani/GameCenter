@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Word Search Game</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/mobile-games.css">
 </head>
 <body>
   <!-- Profili i nxënësit -->
@@ -109,9 +110,17 @@ function generateGrid() {
       cell.textContent = gridData[r][c];
       cell.dataset.row = r;
       cell.dataset.col = c;
+      
+      // Mouse events
       cell.addEventListener('mousedown', handleMouseDown);
       cell.addEventListener('mouseenter', handleMouseEnter);
       cell.addEventListener('mouseup', handleMouseUp);
+      
+      // Touch events for mobile
+      cell.addEventListener('touchstart', handleTouchStart, { passive: false });
+      cell.addEventListener('touchmove', handleTouchMove, { passive: false });
+      cell.addEventListener('touchend', handleTouchEnd, { passive: false });
+      
       grid.appendChild(cell);
     }
   }
@@ -198,6 +207,31 @@ function handleMouseUp() {
     document.getElementById('finish-button').style.display = 'inline-block';
     showConfetti();
   }
+}
+
+// Touch event handlers for mobile
+function handleTouchStart(e) {
+  e.preventDefault();
+  mouseDown = true;
+  selectedCells = [e.target];
+  e.target.classList.add('selected');
+}
+
+function handleTouchMove(e) {
+  e.preventDefault();
+  if (mouseDown) {
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.classList.contains('word-search-cell') && !selectedCells.includes(element)) {
+      selectedCells.push(element);
+      element.classList.add('selected');
+    }
+  }
+}
+
+function handleTouchEnd(e) {
+  e.preventDefault();
+  handleMouseUp();
 }
 
 function markAsFound() {
