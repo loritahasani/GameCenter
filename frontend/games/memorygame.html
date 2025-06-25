@@ -129,6 +129,43 @@ function createCard(value) {
     board.appendChild(btn);
 }
 
+// Add responsive card sizing
+function adjustCardSize() {
+    const isMobile = window.innerWidth <= 768;
+    const cards = document.querySelectorAll('.memory-card');
+    
+    cards.forEach(card => {
+        if (isMobile) {
+            card.style.width = '60px';
+            card.style.height = '60px';
+            card.style.fontSize = '24px';
+            card.style.margin = '2px';
+        } else {
+            card.style.width = '80px';
+            card.style.height = '80px';
+            card.style.fontSize = '32px';
+            card.style.margin = '4px';
+        }
+    });
+}
+
+// Add responsive board layout
+function adjustBoardLayout() {
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        board.style.gridTemplateColumns = 'repeat(5, 1fr)';
+        board.style.gap = '4px';
+        board.style.maxWidth = '100vw';
+        board.style.padding = '10px';
+    } else {
+        board.style.gridTemplateColumns = 'repeat(5, 1fr)';
+        board.style.gap = '8px';
+        board.style.maxWidth = '600px';
+        board.style.padding = '20px';
+    }
+}
+
 function checkMatch() {
     const [card1, card2] = flipped;
     if (card1.textContent === card2.textContent) {
@@ -167,6 +204,12 @@ function resetGame() {
     cards = generateUniqueCards();
     shuffle(cards);
     cards.forEach(createCard);
+    
+    // Adjust layout after creating cards
+    setTimeout(() => {
+        adjustCardSize();
+        adjustBoardLayout();
+    }, 100);
 }
 
 function startGame() {
@@ -175,9 +218,16 @@ function startGame() {
     resetGame();
 }
 
+// Add window resize listener for responsive design
+window.addEventListener('resize', () => {
+    adjustCardSize();
+    adjustBoardLayout();
+});
+
 // Load user scores when the page loads, but don't start the game
 window.addEventListener('DOMContentLoaded', (event) => {
     loadUserScores();
+    adjustBoardLayout(); // Initial layout adjustment
 });
 
 function loadUserScores() {

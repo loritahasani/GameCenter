@@ -60,6 +60,56 @@
   }
 }
 
+/* START MENUS - Make bigger on mobile */
+@media (max-width: 900px) {
+  .math-quiz-menu {
+    padding: 2rem !important;
+    border-radius: 15px !important;
+    max-width: 90vw !important;
+  }
+  
+  .math-quiz-menu h1 {
+    font-size: 2.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .game-icon {
+    font-size: 4rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .start-btn {
+    padding: 1rem 2rem !important;
+    font-size: 1.5rem !important;
+    min-height: 60px !important;
+    border-radius: 12px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .math-quiz-menu {
+    padding: 1.5rem !important;
+    max-width: 95vw !important;
+  }
+  
+  .math-quiz-menu h1 {
+    font-size: 2rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .game-icon {
+    font-size: 3rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+  
+  .start-btn {
+    padding: 0.8rem 1.5rem !important;
+    font-size: 1.3rem !important;
+    min-height: 50px !important;
+    border-radius: 10px !important;
+  }
+}
+
 /* Touch improvements for better selection */
 @media (hover: none) and (pointer: coarse) {
   .word-search-cell,
@@ -79,4 +129,320 @@
     cursor: pointer;
     user-select: none;
   }
+  
+  /* Make start button more touch-friendly */
+  .start-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+}
+
+/* Mobile Responsive Styles for Games */
+
+/* General mobile optimizations */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    h1 {
+        font-size: 24px;
+        margin: 10px 0;
+    }
+    
+    h2 {
+        font-size: 20px;
+        margin: 8px 0;
+    }
+    
+    button {
+        min-height: 44px; /* iOS recommended touch target size */
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+}
+
+/* Word Search Game Mobile Styles */
+@media (max-width: 768px) {
+    .word-search-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 2px;
+        max-width: 100vw;
+        padding: 10px;
+        margin: 0 auto;
+    }
+    
+    .word-search-cell {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ccc;
+        background: #f9f9f9;
+        cursor: pointer;
+        user-select: none;
+        touch-action: manipulation;
+        transition: all 0.2s ease;
+    }
+    
+    .word-search-cell.selected {
+        background: #3498db;
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .word-search-cell.found {
+        background: #27ae60;
+        color: white;
+        transform: scale(1.05);
+    }
+    
+    .word-list {
+        font-size: 16px;
+        margin: 15px 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-align: center;
+        word-wrap: break-word;
+    }
+    
+    #feedback {
+        font-size: 16px;
+        margin: 15px 0;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        min-height: 20px;
+    }
+    
+    /* Improve touch targets */
+    .word-search-cell:active {
+        transform: scale(0.95);
+    }
+    
+    /* Prevent text selection during swipes */
+    .word-search-grid {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+}
+
+/* Memory Game Mobile Styles */
+@media (max-width: 768px) {
+    .memory-game-board {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+        max-width: 100vw;
+        padding: 10px;
+        margin: 0 auto;
+        justify-items: center;
+    }
+    
+    .memory-card {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        margin: 2px;
+        border: 2px solid #3498db;
+        border-radius: 8px;
+        background: #3498db;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        touch-action: manipulation;
+        user-select: none;
+    }
+    
+    .memory-card:hover {
+        background: #2980b9;
+        transform: scale(1.05);
+    }
+    
+    .memory-card:active {
+        transform: scale(0.95);
+    }
+    
+    .memory-card:disabled {
+        background: #27ae60;
+        cursor: default;
+        transform: scale(1);
+    }
+    
+    .memory-game-message {
+        font-size: 16px;
+        margin: 15px 0;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        min-height: 20px;
+    }
+    
+    .progress-text {
+        font-size: 16px;
+        margin: 15px 0;
+        text-align: center;
+    }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .word-search-grid {
+        max-width: 80vw;
+        gap: 3px;
+    }
+    
+    .word-search-cell {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .memory-game-board {
+        max-width: 80vw;
+        gap: 6px;
+    }
+    
+    .memory-card {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+    }
+}
+
+/* Dark mode support for mobile */
+@media (prefers-color-scheme: dark) {
+    .word-search-cell {
+        background: #2c3e50;
+        color: #ecf0f1;
+        border-color: #34495e;
+    }
+    
+    .word-search-cell.selected {
+        background: #3498db;
+        color: white;
+    }
+    
+    .word-search-cell.found {
+        background: #27ae60;
+        color: white;
+    }
+    
+    .word-list {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .memory-card {
+        background: #2c3e50;
+        border-color: #3498db;
+        color: #ecf0f1;
+    }
+    
+    .memory-card:hover {
+        background: #34495e;
+    }
+    
+    .memory-card:disabled {
+        background: #27ae60;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    .word-search-grid {
+        max-width: 90vw;
+        gap: 1px;
+    }
+    
+    .word-search-cell {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .memory-game-board {
+        max-width: 90vw;
+        gap: 2px;
+    }
+    
+    .memory-card {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    h1 {
+        font-size: 20px;
+        margin: 5px 0;
+    }
+    
+    h2 {
+        font-size: 18px;
+        margin: 5px 0;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .word-search-cell {
+        border-width: 0.5px;
+    }
+    
+    .memory-card {
+        border-width: 1px;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .word-search-cell,
+    .memory-card {
+        transition: none;
+    }
+    
+    .word-search-cell.selected,
+    .word-search-cell.found,
+    .memory-card:hover,
+    .memory-card:active {
+        transform: none;
+    }
+}
+
+/* Focus styles for keyboard navigation */
+.word-search-cell:focus,
+.memory-card:focus {
+    outline: 2px solid #3498db;
+    outline-offset: 2px;
+}
+
+/* Loading states */
+.word-search-cell.loading,
+.memory-card.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Success animations */
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.word-search-cell.found,
+.memory-card:disabled {
+    animation: successPulse 0.5s ease-in-out;
 } 

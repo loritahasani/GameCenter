@@ -125,6 +125,9 @@ function generateGrid() {
     }
   }
 
+  // Adjust grid size for responsive design
+  adjustGridSize();
+
   // Shfaq listën e fjalëve
   document.getElementById('word-list').textContent = currentWords.join(", ");
 }
@@ -215,6 +218,11 @@ function handleTouchStart(e) {
   mouseDown = true;
   selectedCells = [e.target];
   e.target.classList.add('selected');
+  
+  // Store initial touch position for swipe detection
+  const touch = e.touches[0];
+  e.target.dataset.touchStartX = touch.clientX;
+  e.target.dataset.touchStartY = touch.clientY;
 }
 
 function handleTouchMove(e) {
@@ -222,9 +230,25 @@ function handleTouchMove(e) {
   if (mouseDown) {
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (element && element.classList.contains('word-search-cell') && !selectedCells.includes(element)) {
-      selectedCells.push(element);
-      element.classList.add('selected');
+    
+    if (element && element.classList.contains('word-search-cell')) {
+      // Check if this is a valid swipe direction (horizontal or vertical)
+      const startCell = selectedCells[0];
+      if (startCell) {
+        const startRow = parseInt(startCell.dataset.row);
+        const startCol = parseInt(startCell.dataset.col);
+        const currentRow = parseInt(element.dataset.row);
+        const currentCol = parseInt(element.dataset.col);
+        
+        // Only allow horizontal or vertical swipes
+        const isHorizontal = Math.abs(currentRow - startRow) === 0;
+        const isVertical = Math.abs(currentCol - startCol) === 0;
+        
+        if ((isHorizontal || isVertical) && !selectedCells.includes(element)) {
+          selectedCells.push(element);
+          element.classList.add('selected');
+        }
+      }
     }
   }
 }
@@ -299,9 +323,31 @@ function startGame() {
     generateGrid();
 }
 
+// Add responsive grid sizing
+function adjustGridSize() {
+  const grid = document.getElementById('grid');
+  const isMobile = window.innerWidth <= 768;
+  
+  if (isMobile) {
+    grid.style.gridTemplateColumns = 'repeat(10, 1fr)';
+    grid.style.gap = '2px';
+    grid.style.maxWidth = '100vw';
+    grid.style.padding = '10px';
+  } else {
+    grid.style.gridTemplateColumns = 'repeat(10, 1fr)';
+    grid.style.gap = '4px';
+    grid.style.maxWidth = '600px';
+    grid.style.padding = '20px';
+  }
+}
+
+// Add window resize listener for responsive design
+window.addEventListener('resize', adjustGridSize);
+
 // Load user scores when the page loads, but don't start the game
 window.addEventListener('DOMContentLoaded', (event) => {
     loadUserScores();
+    adjustGridSize(); // Initial size adjustment
 });
 </script>
 
